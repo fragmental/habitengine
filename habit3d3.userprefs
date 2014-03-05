@@ -1,0 +1,26 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\scripts\Login.cs">
+    <Files>
+      <File FileName="Assets\scripts\GuiTest.cs" Line="1" Column="1" />
+      <File FileName="Assets\scripts\UserStats.cs" Line="1" Column="1" />
+      <File FileName="Assets\scripts\Login.cs" Line="24" Column="23" />
+      <File FileName="Assets\scripts\example code\PasswordFieldTest.cs" Line="1" Column="1" />
+      <File FileName="Assets\plugins\SimpleJSON.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\ReadMe.txt" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\ChangeColor.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\ChangeColorButton.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\DemoGuiSkin.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\LoadScene.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\MoveOnPress.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\NonScalingImageButton.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\ScrollBarButton.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\ToggleImage.cs" Line="1" Column="1" />
+      <File FileName="Assets\Fantasy-Colorable\SupportingArtefacts\Scripts\UITab.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

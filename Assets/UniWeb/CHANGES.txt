@@ -1,0 +1,23 @@
+- 03/01/2014
+Added default Accept header if not specified.
+Removed Authorisation header if uri.UserInfo is null or == ""
+
+- 05/12/2013
+Added new ZLib DLL that allows compilation with .NET 2.0 Subset.
+Added comments showing where to implement SSL certificate check.
+
+- 26/11/2013
+Fixed Disposed object exception when using GZip.
+Fixed Redirect Handling (change Method to "GET" on 301, 302, leave unchanged on 307)
+
+- 22/11/2013
+Refactoring Marathon:
+    Modified Socket.IO to be closer to the offical API.
+    Merged all examples into one file.
+    Removed obsolete methods.
+    Removed some extra methods, so there should only be one way to do something. (or 2 ;-)
+
+Bugs Fixed:
+    Dead requests when coming back from sleep on iOS
+    Added close messages to discarded websockets.
+
