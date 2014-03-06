@@ -23,9 +23,10 @@ public class UserStats : MonoBehaviour
     public float hpHeight = 40;
     public Texture2D emptyTex;
     public Texture2D fullTex;
+	public Texture2D xpTex;
  	public Vector2 hudPos = new Vector2(0,0);
 	public Vector2 hudSize = new Vector2(60,20);
-	public Vector2 xpPos = new Vector2(100,70);
+	public Vector2 xpPos = new Vector2(150,70);
 	//public Vector2 xpSize = new Vector2(60,20);
     public float xpLength = 60;
     public float xpHeight = 40;
@@ -139,6 +140,7 @@ public class UserStats : MonoBehaviour
 	private Color colorGood2 = new Color(138/255F, 190/255F, 120/255F, 1);
 	private Color colorBetter2 = new Color(125/255F, 169/255F, 177/255F, 1);
 	private Color colorBest2 = new Color(82/255F, 135/255F, 232/255F, 1);
+	public GUIStyle hudStyle;
 
     void Start()
 	{
@@ -146,27 +148,27 @@ public class UserStats : MonoBehaviour
 		habitBoxSpread = 50;
 		togPosX = 8;
 		togPosY = 3;
-                uid = Login.uid;
+        uid = Login.uid;
         key = Login.key;
         //GUI.skin = ColoredGUISkin.Instance.UpdateGuiColors(primaryColors[0], secondaryColors[0]);
         float scrW = Screen.width;
 		buttSize = 35;
 		buttSizeY = (float)3.5;
-	    healthBarLength = scrW / 2;
+	    healthBarLength = Screen.width / 2;
         Debug.Log("healthBarLength = " + healthBarLength);
 	    hpLength =   healthBarLength;
 	    xpLength = healthBarLength;
 	    pos.y = Screen.height/30;
 	    xpPos.y = pos.y + 30;
-	    xpPos.x = 100;
+	    xpPos.x = 150;
 	    pos.x = xpPos.x;
 	    lvlPos.x = Screen.width/25;
 	    lvlPos.y = Screen.height/6-40;
 	    lvlSize.x = 80;
 	    lvlSize.y = 40;
         buttHeight = 42;
-        buttLength = scrW * 24 / 100;
-        Debug.Log("buttLength = " + buttLength);
+        buttLength = Screen.width * 24 / 100;      
+		Debug.Log("buttLength = " + buttLength);
         buttSpread = Screen.width / 4;
         Debug.Log("buttSpread = " + buttSpread);
         buttDistance = 28;
@@ -718,25 +720,27 @@ public class UserStats : MonoBehaviour
                 StartCoroutine(HrpgJson());
             }
 			//draw the hp background
-			GUI.BeginGroup(new Rect(pos.x, pos.y,hpLength, hpHeight));
-			    GUI.Box(new Rect(0,0,hpLength, hpHeight), emptyTex);
-				GUI.Box(new Rect(0,0,hpLength, hpHeight), health + "/" + maxHealth);
+			GUI.BeginGroup(new Rect(pos.x, pos.y,Screen.width/2, hpHeight));
+			    GUI.Box(new Rect(0,0,Screen.width/2, hpHeight), emptyTex);
+				GUI.DrawTexture(new Rect(10, 9, health/maxHealth*Screen.width/2-19, hpHeight-19), fullTex, ScaleMode.StretchToFill, true, 2.5F);	
+				GUI.Box(new Rect(0,0,Screen.width/2, hpHeight), health + "/" + maxHealth, hudStyle);
 			 
 			    //draw the hp filled-in part:
-			    GUI.BeginGroup(new Rect(0,0, health/maxHealth*hpLength, hpHeight));
-							
-			        GUI.Box(new Rect(0,0,hpLength, hpHeight), fullTex);
+			    //GUI.BeginGroup(new Rect(0,0, health/maxHealth*Screen.width/2, hpHeight));
+						
+			        //GUI.Box(new Rect(0,0,Screen.width/2, hpHeight), fullTex);
 					//GUI.Box (new Rect(10, 10, 100, 20), barDisplay + "/" + MaxHealth);
-			    GUI.EndGroup();
+			    //GUI.EndGroup();
 			GUI.EndGroup();
 			
-			GUI.BeginGroup(new Rect(xpPos.x, xpPos.y, xpLength, xpHeight));
-			    GUI.Box(new Rect(0,0, xpLength, xpHeight), emptyTex);
-				GUI.Box(new Rect(0,0, xpLength, xpHeight), xp + "/" + nextLevel);
-				GUI.BeginGroup(new Rect(0,0, xp/nextLevel*xpLength, xpHeight));
-			        GUI.Box(new Rect(0,0, xpLength, xpHeight), fullTex);
+			GUI.BeginGroup(new Rect(xpPos.x, xpPos.y, Screen.width/2, xpHeight));
+			    GUI.Box(new Rect(0,0, Screen.width/2, xpHeight), emptyTex);
+				GUI.DrawTexture(new Rect(10, 9, xp/nextLevel*Screen.width/2-19, xpHeight-19), xpTex, ScaleMode.StretchToFill, true, 2.5F);
+				GUI.Box(new Rect(0,0, Screen.width/2, xpHeight), xp + "/" + nextLevel,hudStyle);
+				//GUI.BeginGroup(new Rect(0,0, xp/nextLevel*Screen.width/2, xpHeight));
+			    //    GUI.Box(new Rect(0,0, Screen.width/2, xpHeight), fullTex);
 							
-			    GUI.EndGroup();
+			    //GUI.EndGroup();
 			GUI.EndGroup();
 		GUI.EndGroup();
 
@@ -745,9 +749,9 @@ public class UserStats : MonoBehaviour
 
         //List Habits
         GUI.BeginGroup(new Rect(5, Screen.height / 6, Screen.width, habitList.Count * buttDistance + buttAddSpread));
-        GUI.Box(new Rect(0, 0, buttLength, buttHeight), "Habits");
-		habitAdd = GUI.TextField(new Rect(0, 30, buttLength-20, buttHeight), habitAdd, 100);
-		if (GUI.Button(new Rect(buttLength-35, 30+buttSizeY, buttSize, buttSize), "+"))
+        GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Habits");
+		habitAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), habitAdd, 100);
+		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
 			if (habitAdd != "")
 			{
@@ -764,7 +768,7 @@ public class UserStats : MonoBehaviour
             for (i = 0; i < habitList.Count; i++)
             {
 			GUI.backgroundColor = habitColor[i];
-                GUI.Box(new Rect(habitBoxSpread, i * buttDistance, buttLength-42, buttHeight), habitList[i]);
+                GUI.Box(new Rect(habitBoxSpread, i * buttDistance, Screen.width * 24 / 100-42, buttHeight), habitList[i]);
                 if(habitUp[i])
                 {
                     if (GUI.Button(new Rect(5, i * buttDistance + buttSizeY, buttSize, buttSize), "+"))
@@ -791,13 +795,13 @@ public class UserStats : MonoBehaviour
         GUI.EndGroup();
             
         //List Dailies
-        GUI.BeginGroup(new Rect(buttSpread + 5, Screen.height / 6, Screen.width, dailyList.Count * buttDistance + buttAddSpread));
-        GUI.Box(new Rect(0, 0, buttLength, buttHeight), "Dailies");
-		//int ferk = (int)buttLength - 4;
+        GUI.BeginGroup(new Rect(Screen.width/4 + 5, Screen.height / 6, Screen.width, dailyList.Count * buttDistance + buttAddSpread));
+        GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Dailies");
+		//int ferk = (int)Screen.width * 24 / 100 - 4;
 		//Debug.Log ("textLength is " + ferk);
-		dailyAdd = GUI.TextField(new Rect(0, 30, buttLength-20, buttHeight), dailyAdd, 100);
+		dailyAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), dailyAdd, 100);
 		//uid = GUI.TextField(new Rect(xShift + 110, yShift + 120, 300, 30), uid, 36);
-		if (GUI.Button(new Rect(buttLength-35, 30+buttSizeY, buttSize, buttSize), "+"))
+		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
 			if (dailyAdd != "")
 			{
@@ -814,10 +818,10 @@ public class UserStats : MonoBehaviour
             for (i = 0; i < dailyList.Count; i++)
             {
 
-                GUI.Box(new Rect(20, i * buttDistance, buttLength-20, buttHeight), dailyList[i]);
+                GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), dailyList[i]);
 				GUI.Box(new Rect(0, i * buttDistance, 40 , buttHeight), emptyTex);
 				
-                dailyListClicked[i] = GUI.Toggle(new Rect(togPosX , i * buttDistance+togPosY, buttLength , buttDistance ), dailyToggleList[i], dailyList[i]);
+                dailyListClicked[i] = GUI.Toggle(new Rect(togPosX , i * buttDistance+togPosY, Screen.width * 24 / 100 , buttDistance ), dailyToggleList[i], dailyList[i]);
                         
                 if(dailyListClicked[i] != dailyToggleList[i])
                 {
@@ -829,10 +833,10 @@ public class UserStats : MonoBehaviour
         GUI.EndGroup();
 
         //List Todos
-        GUI.BeginGroup(new Rect(buttSpread * 2 + 5, Screen.height / 6, Screen.width, todoList.Count * buttDistance + buttAddSpread));
-        GUI.Box(new Rect(0, 0, buttLength, buttHeight), "Todos");
-		todoAdd = GUI.TextField(new Rect(0, 30, buttLength-20, buttHeight), todoAdd, 100);
-		if (GUI.Button(new Rect(buttLength-35, 30+buttSizeY, buttSize, buttSize), "+"))
+        GUI.BeginGroup(new Rect(Screen.width/4 * 2 + 5, Screen.height / 6, Screen.width, todoList.Count * buttDistance + buttAddSpread));
+        GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Todos");
+		todoAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), todoAdd, 100);
+		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
 			if (todoAdd != "")
 			{
@@ -849,11 +853,11 @@ public class UserStats : MonoBehaviour
             {
                 if (todoCompleted[i] == false)
                 {
-                    GUI.Box(new Rect(20, i * buttDistance, buttLength-20, buttHeight), todoList[i]);
+                    GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), todoList[i]);
 					GUI.Box(new Rect(0, i * buttDistance, 40 , buttHeight), emptyTex);
 
 
-				if (todoToggleList[i] = GUI.Toggle(new Rect(0, i * buttDistance, buttLength, buttDistance), todoToggleList[i], todoList[i]))
+				if (todoToggleList[i] = GUI.Toggle(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttDistance), todoToggleList[i], todoList[i]))
                     {
                         StartCoroutine(TodoUpdate());
                         todoCompleted[i] = true;
@@ -871,10 +875,10 @@ public class UserStats : MonoBehaviour
         GUI.EndGroup();
 
         //List Rewards
-        GUI.BeginGroup(new Rect(buttSpread * 3 + 5, Screen.height / 6, Screen.width, rewardList.Count * buttDistance + buttAddSpread));
-        GUI.Box(new Rect(0, 0, buttLength, buttHeight), "Rewards  "+ gp+" GP");
-		rewardAdd = GUI.TextField(new Rect(0, 30, buttLength-20, buttHeight), rewardAdd, 100);
-		if (GUI.Button(new Rect(buttLength-35, 30+buttSizeY, buttSize, buttSize), "+"))
+        GUI.BeginGroup(new Rect(Screen.width/4 * 3 + 5, Screen.height / 6, Screen.width, rewardList.Count * buttDistance + buttAddSpread));
+        GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Rewards  "+ gp+" GP");
+		rewardAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), rewardAdd, 100);
+		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
 			if (rewardAdd != "")
 			{
@@ -891,7 +895,7 @@ public class UserStats : MonoBehaviour
             {
 
 
-                if (GUI.Button(new Rect(0, i * buttDistance, buttLength, buttHeight), "Buy (" + rewardValue[i]+") "+rewardList[i]))
+                if (GUI.Button(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttHeight), "Buy (" + rewardValue[i]+") "+rewardList[i]))
                 {
 
                     Debug.Log("you pressed button " + rewardList[i]);
