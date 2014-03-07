@@ -607,7 +607,24 @@ public class UserStats : MonoBehaviour
                 habitDown.Add((bool)habit["down"]);
                 habitIDList.Add((string)habit["id"]);
                 habitClick.Add(true);
-				habitValue.Add((float) habit["value"]);
+				/*
+				 * Fuck this cast exception bullshit.
+				//var valueType = (float)habit["value"];
+				Type v = habit["value"].GetType();
+				
+				Debug.Log("value type is " + v.FullName);
+
+				if (habit["value"] is int)
+				{
+					Debug.Log("Fucking Finally!");
+					int intConv = (int)habit["value"];
+					float floatConv = (float)intConv;
+					habitValue.Add((float) floatConv);
+				}
+				else
+				{
+					habitValue.Add((float) habit["value"] as float);
+				}
 				//var valueType = (float)habit["value"];
 				//Type t = valueType.GetType();
 
@@ -643,6 +660,7 @@ public class UserStats : MonoBehaviour
 				habitColor.Add(colorBest);
 				}
 				i++;
+				*/
             }
                 
                 
@@ -705,9 +723,9 @@ public class UserStats : MonoBehaviour
         //GUI.skin = ColoredGUISkin.Instance.UpdateGuiColors(primaryColors[0], secondaryColors[0]);
         //GUI.skin = newSkin;
         //GUI.skin = ColoredGUISkin.Skin;
-		GUI.BeginGroup(new Rect(0, 0, Screen.width, Screen.height/6));
-			GUI.Box(new Rect(0,0, Screen.width, Screen.height/6), emptyTex);
-			GUI.Box(new Rect(lvlPos.x, lvlPos.y, lvlSize.x, lvlSize.y), "Lvl " + lvl);
+		GUI.BeginGroup(new Rect(0, 0, Screen.width, Screen.height/6+10));
+			GUI.Box(new Rect(0,0, Screen.width, Screen.height/6+10), emptyTex);
+		GUI.Box(new Rect(70, Screen.height/6-30, lvlSize.x, lvlSize.y), "Lvl " + lvl);
 			GUI.Box(new Rect(0,0, 150, 40 ), name);
             if (GUI.Button(new Rect(Screen.width - 110, 15, 90, 35), "Quit"))
             {
@@ -767,7 +785,7 @@ public class UserStats : MonoBehaviour
 
             for (i = 0; i < habitList.Count; i++)
             {
-			GUI.backgroundColor = habitColor[i];
+//			GUI.backgroundColor = habitColor[i];
                 GUI.Box(new Rect(habitBoxSpread, i * buttDistance, Screen.width * 24 / 100-42, buttHeight), habitList[i]);
                 if(habitUp[i])
                 {
@@ -895,7 +913,7 @@ public class UserStats : MonoBehaviour
             {
 
 
-                if (GUI.Button(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttHeight), "Buy (" + rewardValue[i]+") "+rewardList[i]))
+                if (GUI.Button(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttHeight-5), "Buy (" + rewardValue[i]+") "+rewardList[i]))
                 {
 
                     Debug.Log("you pressed button " + rewardList[i]);

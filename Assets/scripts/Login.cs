@@ -77,8 +77,8 @@ public class Login : MonoBehaviour
         Debug.Log("screenWidth = " + screenWidth);
 
         //xShiftA = screenWidth / 2;
-        xShift = screenWidth / 2 - introString1.Length * 3;
-		yShift = screenHeight / 2 - screenHeight/4;
+        xShift = Screen.width / 2 - introString1.Length * 3;
+		yShift = Screen.height / 2 - Screen.height/4;
 
 
         if (PlayerPrefs.HasKey("uid") && PlayerPrefs.HasKey("key"))
@@ -270,19 +270,19 @@ public class Login : MonoBehaviour
 
 
 			//GUI.skin = FantasyColorable;
-			GUI.Label(new Rect(xShift, yShift , screenWidth, 30), introString1);
+			GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 , Screen.width, 30), introString1);
 	       
 	        
-	        GUI.Label(new Rect(xShift, yShift + 20, screenWidth, 30), introString2);
-	        //GUI.Label(new Rect(xShift, yShift + 40, screenWidth, 30), "To test without uid and api key, simply hit the 'testercules' button.  ");
-	        //GUI.Label(Rect(0, yShift + 40, screenWidth, 30), "For testercules use username 'testercules' and password 'tester'", header1Style);
+	        GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 20, Screen.width, 30), introString2);
+	        //GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 40, Screen.width, 30), "To test without uid and api key, simply hit the 'testercules' button.  ");
+	        //GUI.Label(Rect(0, Screen.height / 2 - Screen.height/4 + 40, Screen.width, 30), "For testercules use username 'testercules' and password 'tester'", header1Style);
 
-			if (GUI.Button(new Rect(xShift + lPBPX, yShift + lPBPY, lPBSX, lPBSY), "Login with Username and Password"))
+			if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 + lPBPX, Screen.height / 2 - Screen.height/4 + lPBPY, lPBSX, lPBSY), "Login with Username and Password"))
 			{
 				uPass=true;
 				//choice=true;
 			}
-			if (GUI.Button(new Rect(xShift + lABPX, yShift + lABPY, lABSX, lABSY), "Login with API UID and Token"))
+			if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 + lABPX, Screen.height / 2 - Screen.height/4 + lABPY, lABSX, lABSY), "Login with API UID and Token"))
 			{
 				uPass=false;
 				//choice=true;
@@ -291,25 +291,25 @@ public class Login : MonoBehaviour
 	        // Message label:
 	        if (error)
 	        {
-	            GUI.Label(new Rect(xShift, yShift + 90, screenWidth, 30), "There was an error in the login.  Please try again");
+	            GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 90, Screen.width, 30), "There was an error in the login.  Please try again");
 	        }
 	        else
 	        {
-	            GUI.Label(new Rect(xShift, yShift + 90, screenWidth, 30), "Enter your HabitRPG User ID and API Token");
+	            GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 90, Screen.width, 30), "Enter your HabitRPG User ID and API Token");
 	        }
 
 			if (uPass)
 			{
 	        // uid label and uid text field:
-		        GUI.Label(new Rect(xShift, yShift + 130, 100, 40), "Enter User Name");
-		        uName = GUI.TextField(new Rect(xShift + 110, yShift + 120, 350, 50), uName, 36);
+		        GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 130, 100, 40), "Enter User Name");
+		        uName = GUI.TextField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 120, 350, 50), uName, 36);
 
 		        // key label and key text field:
-		        GUI.Label(new Rect(xShift, yShift + 180, 100, 40), "Enter Password");
-		        pass = GUI.PasswordField(new Rect(xShift + 110, yShift + 170, 350, 50), pass, "*"[0],36);
+		        GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 180, 100, 40), "Enter Password");
+		        pass = GUI.PasswordField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 170, 350, 50), pass, "*"[0],36);
 		
 		        // Login button:
-		        if (GUI.Button(new Rect(xShift - 10, yShift + 220, 320 + lPXS, 35), "Login with Username and Password"))
+		        if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lPXS, 35), "Login with Username and Password"))
 				{
 					//StartCoroutine(LoginRequest());
 					StartCoroutine(LoginRetrieve());
@@ -319,15 +319,15 @@ public class Login : MonoBehaviour
 			else if (!uPass)
 			{
 				// uid label and uid text field:
-				GUI.Label(new Rect(xShift, yShift + 130, 100, 40), "Enter UID");
-				uid = GUI.TextField(new Rect(xShift + 110, yShift + 120, 350, 50), uid, 36);
+				GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 130, 100, 40), "Enter UID");
+				uid = GUI.TextField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 120, 350, 50), uid, 36);
 				
 				// key label and key text field:
-				GUI.Label(new Rect(xShift, yShift + 180, 100, 40), "Enter Token");
-				key = GUI.TextField(new Rect(xShift + 110, yShift + 170, 350, 50), key,36);
+				GUI.Label(new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 180, 100, 40), "Enter Token");
+				key = GUI.TextField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 170, 350, 50), key,36);
 				
 				// Login button:
-				if (GUI.Button(new Rect(xShift - 10, yShift + 220, 320 + lAXS, 35), "Login with UID and Token"))
+				if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lAXS, 35), "Login with UID and Token"))
 				{
 					StartCoroutine(LoginRequest());
 					//StartCoroutine(LoginRetrieve());
@@ -337,7 +337,7 @@ public class Login : MonoBehaviour
 		
 		
 		//Login with Testercules
-		/*if (GUI.Button( new Rect(xShift, yShift + 220, 120, 30), "testercules!"))
+		/*if (GUI.Button( new Rect(Screen.width / 2 - introString1.Length * 3, Screen.height / 2 - Screen.height/4 + 220, 120, 30), "testercules!"))
 	        {
 	            uid = "f78c4fdf-f404-4922-8d83-cbcf941119c4";
 	            key = "345a363b-6092-422f-9dfb-9caf3373c4e0";
