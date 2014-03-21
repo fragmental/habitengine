@@ -6,7 +6,7 @@ using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using LostPolygon.System.Net.Sockets;
 using System.Threading;
 
 #if USE_SSL
@@ -17,7 +17,7 @@ using System.Security.Cryptography;
 
 #endif
 using System.IO;
-using System.Net;
+using LostPolygon.System.Net;
 
 namespace HTTP
 {

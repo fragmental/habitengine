@@ -543,9 +543,9 @@ public class UserStats : MonoBehaviour
                 ht = userData.ht;
                 //object setupData = new HabitDatav1.setupData(task);
                 PlayerPrefs.SetString("jsonSave", response.Text);
-                Debug.Log("Player prefs after if is " + PlayerPrefs.GetString("jsonSave"));
+                //Debug.Log("Player prefs after if is " + PlayerPrefs.GetString("jsonSave"));
                 something = "yes";
-				Debug.Log ("string 'something' equals" + something);
+				//Debug.Log ("string 'something' equals" + something);
             }
         /*}
         else
@@ -565,8 +565,14 @@ public class UserStats : MonoBehaviour
             Debug.Log("ht is not null and ht2 is" + ht2);
 			//stats = ht2["stats"] as Hashtable;
             stats = userData.Stats;
+
 			Type t = userData.Habits.GetType();
-			Debug.Log("xp type is " + t.FullName);
+			Debug.Log("userData.Habits type is " + t.FullName);
+		    JSONArray habits2 = userData.Habits.AsArray;
+			Type t2 = userData.Habits.GetType();
+			Debug.Log("userData.Habits type is " + t.FullName);
+
+
 			profile = ht2["profile"] as Hashtable;
             habits = ht2["habits"] as ArrayList;
             //habits = userData.Habits;
@@ -598,19 +604,27 @@ public class UserStats : MonoBehaviour
             habitDown.Clear();
             habitIDList.Clear();
             habitClick.Clear();
-            foreach (Hashtable habit in habits)
-            {
+
+			foreach (JSONNode habit in habits2)
+			{
+
+			//}
 
 
-                habitList.Add((string)habit["text"]);
-                habitUp.Add((bool)habit["up"]);
-                habitDown.Add((bool)habit["down"]);
-                habitIDList.Add((string)habit["id"]);
+            //foreach (Hashtable habit in habits)
+            //{
+
+
+                habitList.Add(habit["text"]);
+				habitUp.Add(habit["up"].AsBool);
+				habitDown.Add(habit["down"].AsBool);
+                habitIDList.Add(habit["id"]);
                 habitClick.Add(true);
-				/*
-				 * Fuck this cast exception bullshit.
+				habitValue.Add(habit["value"].AsFloat);
+
+				// Fuck this cast exception bullshit.
 				//var valueType = (float)habit["value"];
-				Type v = habit["value"].GetType();
+				/*Type v = habit["value"].GetType();
 				
 				Debug.Log("value type is " + v.FullName);
 
@@ -630,7 +644,7 @@ public class UserStats : MonoBehaviour
 
 				//Debug.Log("value type is " + t.FullName);
 				//Debug.Log((string)habit["text"]);
-
+*/
 				if (habitValue[i] < -20)
 				{
 				habitColor.Add(colorWorst);
@@ -660,7 +674,7 @@ public class UserStats : MonoBehaviour
 				habitColor.Add(colorBest);
 				}
 				i++;
-				*/
+
             }
                 
                 
@@ -723,6 +737,50 @@ public class UserStats : MonoBehaviour
         //GUI.skin = ColoredGUISkin.Instance.UpdateGuiColors(primaryColors[0], secondaryColors[0]);
         //GUI.skin = newSkin;
         //GUI.skin = ColoredGUISkin.Skin;
+		if (Event.current.isKey && Event.current.keyCode == KeyCode.Return)
+		{	
+			if (GUI.GetNameOfFocusedControl () == "habitAdd")
+			{
+				if (habitAdd != "")
+				{
+					addType = "habit";
+					addText = habitAdd;
+					habitAdd="";
+					StartCoroutine(TaskAdd()); 
+				}
+			}
+				else if (GUI.GetNameOfFocusedControl () == "dailyAdd")
+			{
+				if (dailyAdd != "")
+				{
+					addType = "daily";
+					addText = dailyAdd;
+					dailyAdd="";
+					StartCoroutine(TaskAdd());
+				}
+			}
+				else if (GUI.GetNameOfFocusedControl () == "todoAdd")
+			{
+				if (todoAdd != "")
+				{
+					addType = "todo";
+					addText = todoAdd;
+					todoAdd="";
+					StartCoroutine(TaskAdd());
+				}
+			}
+			else if (GUI.GetNameOfFocusedControl () == "rewardAdd")
+			{
+				if (rewardAdd != "")
+				{
+					addType = "reward";
+					addText = rewardAdd;
+					rewardAdd="";
+					StartCoroutine(TaskAdd()); 
+				}
+			}
+		}
+
 		GUI.BeginGroup(new Rect(0, 0, Screen.width, Screen.height/6+10));
 			GUI.Box(new Rect(0,0, Screen.width, Screen.height/6+10), emptyTex);
 		GUI.Box(new Rect(70, Screen.height/6-30, lvlSize.x, lvlSize.y), "Lvl " + lvl);
@@ -768,6 +826,7 @@ public class UserStats : MonoBehaviour
         //List Habits
         GUI.BeginGroup(new Rect(5, Screen.height / 6, Screen.width, habitList.Count * buttDistance + buttAddSpread));
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Habits");
+		GUI.SetNextControlName ("habitAdd");
 		habitAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), habitAdd, 100);
 		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
@@ -785,7 +844,7 @@ public class UserStats : MonoBehaviour
 
             for (i = 0; i < habitList.Count; i++)
             {
-//			GUI.backgroundColor = habitColor[i];
+			GUI.backgroundColor = habitColor[i];
                 GUI.Box(new Rect(habitBoxSpread, i * buttDistance, Screen.width * 24 / 100-42, buttHeight), habitList[i]);
                 if(habitUp[i])
                 {
@@ -817,6 +876,7 @@ public class UserStats : MonoBehaviour
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Dailies");
 		//int ferk = (int)Screen.width * 24 / 100 - 4;
 		//Debug.Log ("textLength is " + ferk);
+		GUI.SetNextControlName ("dailyAdd");
 		dailyAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), dailyAdd, 100);
 		//uid = GUI.TextField(new Rect(xShift + 110, yShift + 120, 300, 30), uid, 36);
 		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
@@ -853,6 +913,7 @@ public class UserStats : MonoBehaviour
         //List Todos
         GUI.BeginGroup(new Rect(Screen.width/4 * 2 + 5, Screen.height / 6, Screen.width, todoList.Count * buttDistance + buttAddSpread));
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Todos");
+		GUI.SetNextControlName ("todoAdd");
 		todoAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), todoAdd, 100);
 		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{
@@ -895,6 +956,7 @@ public class UserStats : MonoBehaviour
         //List Rewards
         GUI.BeginGroup(new Rect(Screen.width/4 * 3 + 5, Screen.height / 6, Screen.width, rewardList.Count * buttDistance + buttAddSpread));
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Rewards  "+ gp+" GP");
+		GUI.SetNextControlName ("rewardAdd");
 		rewardAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), rewardAdd, 100);
 		if (GUI.Button(new Rect(Screen.width * 24 / 100-35, 30+buttSizeY, buttSize, buttSize), "+"))
 		{

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using HTTP;
 using System.Linq;
+using LostPolygon.System.Net.Sockets;
 
 public class SocketIOConnection : MonoBehaviour
 {

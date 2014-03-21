@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/*using UnityEngine;
 using System;
 using System.Collections;
 using System.Reflection;
@@ -26,6 +26,7 @@ public class WWWApi : MonoBehaviour {
 	
 	}
 	*/
+/*
 	IEnumerator Start()
 	{
 		var form = new WWWForm();
@@ -51,5 +52,5 @@ public class WWWApi : MonoBehaviour {
 	}
 	
 }
-
+*/
 

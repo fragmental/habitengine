@@ -1,6 +1,6 @@
 
 using System;
-using System.Net.Sockets;
+using LostPolygon.System.Net.Sockets;
 using System.IO;
 
 namespace HTTP
