@@ -264,7 +264,6 @@ public class Login : MonoBehaviour
 
 		GUI.skin = ColoredGUISkin.Skin;
 
-
 		//if (serverUp == true)
 		//{
 
@@ -309,7 +308,8 @@ public class Login : MonoBehaviour
 		        pass = GUI.PasswordField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 170, 350, 50), pass, "*"[0],36);
 		
 		        // Login button:
-		        if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lPXS, 35), "Login with Username and Password"))
+		        if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lPXS, 35), "Login with Username and Password") || 
+			       (Event.current.isKey && Event.current.keyCode == KeyCode.Return))
 				{
 					//StartCoroutine(LoginRequest());
 					StartCoroutine(LoginRetrieve());
@@ -327,7 +327,8 @@ public class Login : MonoBehaviour
 				key = GUI.TextField(new Rect(Screen.width / 2 - introString1.Length * 3 + 110, Screen.height / 2 - Screen.height/4 + 170, 350, 50), key,36);
 				
 				// Login button:
-				if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lAXS, 35), "Login with UID and Token"))
+				if (GUI.Button(new Rect(Screen.width / 2 - introString1.Length * 3 - 10, Screen.height / 2 - Screen.height/4 + 220, 320 + lAXS, 35), "Login with UID and Token") || 
+				    (Event.current.isKey && Event.current.keyCode == KeyCode.Return))
 				{
 					StartCoroutine(LoginRequest());
 					//StartCoroutine(LoginRetrieve());
