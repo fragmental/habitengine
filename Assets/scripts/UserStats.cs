@@ -540,7 +540,7 @@ public class UserStats : MonoBehaviour
 		        */
 
                 userData = new HabitDatav1(response.Text);
-                ht = userData.ht;
+                //ht = userData.ht;
                 //object setupData = new HabitDatav1.setupData(task);
                 PlayerPrefs.SetString("jsonSave", response.Text);
                 //Debug.Log("Player prefs after if is " + PlayerPrefs.GetString("jsonSave"));
@@ -561,27 +561,32 @@ public class UserStats : MonoBehaviour
 		if (something == "yes") 
 		{
              
-			Hashtable ht2 = ht as Hashtable;
-            Debug.Log("ht is not null and ht2 is" + ht2);
+			//Hashtable ht2 = ht as Hashtable;
+            //Debug.Log("ht is not null and ht2 is" + ht2);
 			//stats = ht2["stats"] as Hashtable;
             stats = userData.Stats;
 
-			Type t = userData.Habits.GetType();
-			Debug.Log("userData.Habits type is " + t.FullName);
+			//Type t = userData.Habits.GetType();
+			//Debug.Log("userData.Habits type is " + t.FullName);
 		    JSONArray habits2 = userData.Habits.AsArray;
-			Type t2 = userData.Habits.GetType();
-			Debug.Log("userData.Habits type is " + t.FullName);
+			JSONArray dailies2 = userData.Dailies.AsArray;
+			JSONArray todos2 = userData.Todos.AsArray;
+			JSONArray rewards2 = userData.Rewards.AsArray;
+
+			//Type t2 = userData.Habits.GetType();
+			//Debug.Log("userData.Habits type is " + t.FullName);
 
 
-			profile = ht2["profile"] as Hashtable;
+			/*profile = ht2["profile"] as Hashtable;
             habits = ht2["habits"] as ArrayList;
             //habits = userData.Habits;
             dailies = ht2["dailys"] as ArrayList;
             todos = ht2["todos"] as ArrayList;
             rewards = ht2["rewards"] as ArrayList;
-								
+			*/
+
+			//STATS
 			health = stats["hp"].AsFloat;
-				
 			maxHealth = stats["maxHealth"].AsFloat;
 			name = userData.ProfileName;
 			lvl = stats["lvl"].AsFloat;
@@ -598,6 +603,8 @@ public class UserStats : MonoBehaviour
 						
 
             //clears list so they can be repopulated on refresh, and populates the display lists(habits, todos, dailies, rewards)
+
+			//HABITS
 			int i =0;
 			habitList.Clear();
             habitUp.Clear();
@@ -677,40 +684,44 @@ public class UserStats : MonoBehaviour
 
             }
                 
-                
+            //DAILIES
             dailyList.Clear();
             dailyToggleList.Clear();
             dailyListClicked.Clear();
             dailyIDList.Clear();
-            foreach (Hashtable daily in dailies)
+            foreach (JSONNode daily in dailies2)
             {
-                dailyList.Add((string)daily["text"]);
-                dailyToggleList.Add((bool)daily["completed"]);
-                dailyListClicked.Add((bool)daily["completed"]);
-                dailyIDList.Add((string)daily["id"]);
+                dailyList.Add(daily["text"]);
+                dailyToggleList.Add(daily["completed"].AsBool);
+				dailyListClicked.Add(daily["completed"].AsBool);
+                dailyIDList.Add(daily["id"]);
             }
 
+			//TODOS
             todoList.Clear();
             todoToggleList.Clear();
             todoIDList.Clear();
             todoCompleted.Clear();
-            foreach (Hashtable todo in todos)
+            foreach (JSONNode todo in todos2)
             {
-                todoList.Add((string)todo["text"]);
-                todoToggleList.Add((bool)todo["completed"]);
-                todoCompleted.Add((bool)todo["completed"]);
-                todoIDList.Add((string)todo["id"]);
+                todoList.Add(todo["text"]);
+				todoToggleList.Add(todo["completed"].AsBool);
+				todoCompleted.Add(todo["completed"].AsBool);
+                todoIDList.Add(todo["id"]);
             }
 
+			//REWARDS
             rewardList.Clear();
             rewardValue.Clear();
             rewardIDList.Clear();
-            foreach (Hashtable reward in rewards)
+            foreach (JSONNode reward in rewards2)
             {
-                rewardList.Add((string)reward["text"]);
-                rewardValue.Add((long)reward["value"]);
-                rewardIDList.Add((string)reward["id"]);
+                rewardList.Add(reward["text"]);
+                rewardValue.Add(reward["value"].AsInt);
+                rewardIDList.Add(reward["id"]);
             }
+
+			//SCROLLING
             StartCoroutine(ScrollCalc());
   		}	
 		

@@ -1,0 +1,1907 @@
+var $w, api, content, moment, preenHistory, sanitizeOptions, _,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+moment = require('moment');
+
+_ = require('lodash');
+
+content = require('./content.coffee');
+
+api = module.exports = {};
+
+$w = function(s) {
+  return s.split(' ');
+};
+
+
+/*
+  ------------------------------------------------------
+  Time / Day
+  ------------------------------------------------------
+ */
+
+
+/*
+  Each time we're performing date math (cron, task-due-days, etc), we need to take user preferences into consideration.
+  Specifically {dayStart} (custom day start) and {timezoneOffset}. This function sanitizes / defaults those values.
+  {now} is also passed in for various purposes, one example being the test scripts scripts testing different "now" times
+ */
+
+sanitizeOptions = function(o) {
+  var dayStart, now, timezoneOffset, _ref;
+  dayStart = !_.isNaN(+o.dayStart) && (0 <= (_ref = +o.dayStart) && _ref <= 24) ? +o.dayStart : 0;
+  timezoneOffset = o.timezoneOffset ? +o.timezoneOffset : +moment().zone();
+  now = o.now ? moment(o.now).zone(timezoneOffset) : moment(+(new Date)).zone(timezoneOffset);
+  return {
+    dayStart: dayStart,
+    timezoneOffset: timezoneOffset,
+    now: now
+  };
+};
+
+api.startOfWeek = api.startOfWeek = function(options) {
+  var o;
+  if (options == null) {
+    options = {};
+  }
+  o = sanitizeOptions(options);
+  return moment(o.now).startOf('week');
+};
+
+api.startOfDay = function(options) {
+  var o;
+  if (options == null) {
+    options = {};
+  }
+  o = sanitizeOptions(options);
+  return moment(o.now).startOf('day').add('h', o.dayStart);
+};
+
+api.dayMapping = {
+  0: 'su',
+  1: 'm',
+  2: 't',
+  3: 'w',
+  4: 'th',
+  5: 'f',
+  6: 's'
+};
+
+
+/*
+  Absolute diff from "yesterday" till now
+ */
+
+api.daysSince = function(yesterday, options) {
+  var o;
+  if (options == null) {
+    options = {};
+  }
+  o = sanitizeOptions(options);
+  return Math.abs(api.startOfDay(_.defaults({
+    now: yesterday
+  }, o)).diff(o.now, 'days'));
+};
+
+
+/*
+  Should the user do this taks on this date, given the task's repeat options and user.preferences.dayStart?
+ */
+
+api.shouldDo = function(day, repeat, options) {
+  var o, selected, yesterday;
+  if (options == null) {
+    options = {};
+  }
+  if (!repeat) {
+    return false;
+  }
+  o = sanitizeOptions(options);
+  selected = repeat[api.dayMapping[api.startOfDay(_.defaults({
+    now: day
+  }, o)).day()]];
+  if (!moment(day).zone(o.timezoneOffset).isSame(o.now, 'd')) {
+    return selected;
+  }
+  if (options.dayStart <= o.now.hour()) {
+    return selected;
+  } else {
+    yesterday = moment(o.now).subtract(1, 'd').day();
+    return repeat[api.dayMapping[yesterday]];
+  }
+};
+
+
+/*
+  ------------------------------------------------------
+  Scoring
+  ------------------------------------------------------
+ */
+
+api.tnl = function(lvl) {
+  if (lvl >= 100) {
+    return 0;
+  } else {
+    return Math.round(((Math.pow(lvl, 2) * 0.25) + (10 * lvl) + 139.75) / 10) * 10;
+  }
+};
+
+
+/*
+  A hyperbola function that creates diminishing returns, so you can't go to infinite (eg, with Exp gain).
+  {max} The asymptote
+  {bonus} All the numbers combined for your point bonus (eg, task.value * user.stats.int * critChance, etc)
+  {halfway} (optional) the point at which the graph starts bending
+ */
+
+api.diminishingReturns = function(bonus, max, halfway) {
+  if (halfway == null) {
+    halfway = max / 2;
+  }
+  return max * (bonus / (bonus + halfway));
+};
+
+api.monod = function(bonus, rateOfIncrease, max) {
+  return rateOfIncrease * max * bonus / (rateOfIncrease * bonus + max);
+};
+
+
+/*
+Preen history for users with > 7 history entries
+This takes an infinite array of single day entries [day day day day day...], and turns it into a condensed array
+of averages, condensing more the further back in time we go. Eg, 7 entries each for last 7 days; 1 entry each week
+of this month; 1 entry for each month of this year; 1 entry per previous year: [day*7 week*4 month*12 year*infinite]
+ */
+
+preenHistory = function(history) {
+  var newHistory, preen, thisMonth;
+  history = _.filter(history, function(h) {
+    return !!h;
+  });
+  newHistory = [];
+  preen = function(amount, groupBy) {
+    var groups;
+    groups = _.chain(history).groupBy(function(h) {
+      return moment(h.date).format(groupBy);
+    }).sortBy(function(h, k) {
+      return k;
+    }).value();
+    groups = groups.slice(-amount);
+    groups.pop();
+    return _.each(groups, function(group) {
+      newHistory.push({
+        date: moment(group[0].date).toDate(),
+        value: _.reduce(group, (function(m, obj) {
+          return m + obj.value;
+        }), 0) / group.length
+      });
+      return true;
+    });
+  };
+  preen(50, "YYYY");
+  preen(moment().format('MM'), "YYYYMM");
+  thisMonth = moment().format('YYYYMM');
+  newHistory = newHistory.concat(_.filter(history, function(h) {
+    return moment(h.date).format('YYYYMM') === thisMonth;
+  }));
+  return newHistory;
+};
+
+
+/*
+  Update the in-browser store with new gear. FIXME this was in user.fns, but it was causing strange issues there
+ */
+
+api.updateStore = function(user) {
+  var changes;
+  if (!user) {
+    return;
+  }
+  changes = [];
+  _.each(['weapon', 'armor', 'shield', 'head', 'back', 'headAccessory'], function(type) {
+    var found;
+    found = _.find(content.gear.tree[type][user.stats["class"]], function(item) {
+      return !user.items.gear.owned[item.key];
+    });
+    if (found) {
+      changes.push(found);
+    }
+    return true;
+  });
+  changes = changes.concat(_.filter(content.gear.flat, function(v) {
+    var _ref;
+    return ((_ref = v.klass) === 'special' || _ref === 'mystery') && !user.items.gear.owned[v.key] && (typeof v.canOwn === "function" ? v.canOwn(user) : void 0);
+  }));
+  changes.push(content.potion);
+  return _.sortBy(changes, function(item) {
+    switch (item.type) {
+      case 'weapon':
+        return 1;
+      case 'armor':
+        return 2;
+      case 'head':
+        return 3;
+      case 'shield':
+        return 4;
+      case 'back':
+        return 5;
+      case 'headAccessory':
+        return 6;
+      case 'potion':
+        return 7;
+      default:
+        return 8;
+    }
+  });
+};
+
+
+/*
+------------------------------------------------------
+Content
+------------------------------------------------------
+ */
+
+api.content = content;
+
+
+/*
+------------------------------------------------------
+Misc Helpers
+------------------------------------------------------
+ */
+
+api.uuid = function() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    var r, v;
+    r = Math.random() * 16 | 0;
+    v = (c === "x" ? r : r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+api.countExists = function(items) {
+  return _.reduce(items, (function(m, v) {
+    return m + (v ? 1 : 0);
+  }), 0);
+};
+
+
+/*
+Even though Mongoose handles task defaults, we want to make sure defaults are set on the client-side before
+sending up to the server for performance
+ */
+
+api.taskDefaults = function(task) {
+  var defaults, _ref, _ref1, _ref2;
+  if (task == null) {
+    task = {};
+  }
+  if (!(task.type && ((_ref = task.type) === 'habit' || _ref === 'daily' || _ref === 'todo' || _ref === 'reward'))) {
+    task.type = 'habit';
+  }
+  defaults = {
+    id: api.uuid(),
+    text: task.id != null ? task.id : '',
+    notes: '',
+    priority: 1,
+    challenge: {},
+    attribute: 'str',
+    dateCreated: new Date()
+  };
+  _.defaults(task, defaults);
+  if (task.type === 'habit') {
+    _.defaults(task, {
+      up: true,
+      down: true
+    });
+  }
+  if ((_ref1 = task.type) === 'habit' || _ref1 === 'daily') {
+    _.defaults(task, {
+      history: []
+    });
+  }
+  if ((_ref2 = task.type) === 'daily' || _ref2 === 'todo') {
+    _.defaults(task, {
+      completed: false
+    });
+  }
+  if (task.type === 'daily') {
+    _.defaults(task, {
+      streak: 0,
+      repeat: {
+        su: 1,
+        m: 1,
+        t: 1,
+        w: 1,
+        th: 1,
+        f: 1,
+        s: 1
+      }
+    });
+  }
+  task._id = task.id;
+  if (task.value == null) {
+    task.value = task.type === 'reward' ? 10 : 0;
+  }
+  if (!_.isNumber(task.priority)) {
+    task.priority = 1;
+  }
+  return task;
+};
+
+api.percent = function(x, y, dir) {
+  var roundFn;
+  switch (dir) {
+    case "up":
+      roundFn = Math.ceil;
+      break;
+    case "down":
+      roundFn = Math.floor;
+      break;
+    default:
+      roundFn = Math.round;
+  }
+  if (x === 0) {
+    x = 1;
+  }
+  return roundFn(x / y * 100);
+};
+
+
+/*
+Remove whitespace #FIXME are we using this anywwhere? Should we be?
+ */
+
+api.removeWhitespace = function(str) {
+  if (!str) {
+    return '';
+  }
+  return str.replace(/\s/g, '');
+};
+
+
+/*
+Encode the download link for .ics iCal file
+ */
+
+api.encodeiCalLink = function(uid, apiToken) {
+  var loc, _ref;
+  loc = (typeof window !== "undefined" && window !== null ? window.location.host : void 0) || (typeof process !== "undefined" && process !== null ? (_ref = process.env) != null ? _ref.BASE_URL : void 0 : void 0) || '';
+  return encodeURIComponent("http://" + loc + "/v1/users/" + uid + "/calendar.ics?apiToken=" + apiToken);
+};
+
+
+/*
+Gold amount from their money
+ */
+
+api.gold = function(num) {
+  if (num) {
+    return Math.floor(num);
+  } else {
+    return "0";
+  }
+};
+
+
+/*
+Silver amount from their money
+ */
+
+api.silver = function(num) {
+  if (num) {
+    return ("0" + Math.floor((num - Math.floor(num)) * 100)).slice(-2);
+  } else {
+    return "00";
+  }
+};
+
+
+/*
+Task classes given everything about the class
+ */
+
+api.taskClasses = function(task, filters, dayStart, lastCron, showCompleted, main) {
+  var classes, completed, enabled, filter, repeat, type, value, _ref;
+  if (filters == null) {
+    filters = [];
+  }
+  if (dayStart == null) {
+    dayStart = 0;
+  }
+  if (lastCron == null) {
+    lastCron = +(new Date);
+  }
+  if (showCompleted == null) {
+    showCompleted = false;
+  }
+  if (main == null) {
+    main = false;
+  }
+  if (!task) {
+    return;
+  }
+  type = task.type, completed = task.completed, value = task.value, repeat = task.repeat;
+  if ((type === 'todo' && completed !== showCompleted) && main) {
+    return 'hidden';
+  }
+  if (main) {
+    for (filter in filters) {
+      enabled = filters[filter];
+      if (enabled && !((_ref = task.tags) != null ? _ref[filter] : void 0)) {
+        return 'hidden';
+      }
+    }
+  }
+  classes = type;
+  if (type === 'todo' || type === 'daily') {
+    if (completed || (type === 'daily' && !api.shouldDo(+(new Date), task.repeat, {
+      dayStart: dayStart
+    }))) {
+      classes += " completed";
+    } else {
+      classes += " uncompleted";
+    }
+  } else if (type === 'habit') {
+    if (task.down && task.up) {
+      classes += ' habit-wide';
+    }
+  }
+  if (value < -20) {
+    classes += ' color-worst';
+  } else if (value < -10) {
+    classes += ' color-worse';
+  } else if (value < -1) {
+    classes += ' color-bad';
+  } else if (value < 1) {
+    classes += ' color-neutral';
+  } else if (value < 5) {
+    classes += ' color-good';
+  } else if (value < 10) {
+    classes += ' color-better';
+  } else {
+    classes += ' color-best';
+  }
+  return classes;
+};
+
+
+/*
+Friendly timestamp
+ */
+
+api.friendlyTimestamp = function(timestamp) {
+  return moment(timestamp).format('MM/DD h:mm:ss a');
+};
+
+
+/*
+Does user have new chat messages?
+ */
+
+api.newChatMessages = function(messages, lastMessageSeen) {
+  if (!((messages != null ? messages.length : void 0) > 0)) {
+    return false;
+  }
+  return (messages != null ? messages[0] : void 0) && (messages[0].id !== lastMessageSeen);
+};
+
+
+/*
+are any tags active?
+ */
+
+api.noTags = function(tags) {
+  return _.isEmpty(tags) || _.isEmpty(_.filter(tags, function(t) {
+    return t;
+  }));
+};
+
+
+/*
+Are there tags applied?
+ */
+
+api.appliedTags = function(userTags, taskTags) {
+  var arr;
+  arr = [];
+  _.each(userTags, function(t) {
+    if (t == null) {
+      return;
+    }
+    if (taskTags != null ? taskTags[t.id] : void 0) {
+      return arr.push(t.name);
+    }
+  });
+  return arr.join(', ');
+};
+
+api.countPets = function(originalCount, pets) {
+  var count, pet;
+  count = originalCount != null ? originalCount : _.size(pets);
+  for (pet in content.questPets) {
+    if (pets[pet]) {
+      count--;
+    }
+  }
+  for (pet in content.specialPets) {
+    if (pets[pet]) {
+      count--;
+    }
+  }
+  return count;
+};
+
+api.countMounts = function(originalCount, mounts) {
+  var count, mount;
+  count = originalCount != null ? originalCount : _.size(mounts);
+  for (mount in content.specialMounts) {
+    if (mounts[mount]) {
+      count--;
+    }
+  }
+  return count;
+};
+
+
+/*
+------------------------------------------------------
+User (prototype wrapper to give it ops, helper funcs, and virtuals
+------------------------------------------------------
+ */
+
+
+/*
+User is now wrapped (both on client and server), adding a few new properties:
+  * getters (_statsComputed, tasks, etc)
+  * user.fns, which is a bunch of helper functions
+    These were originally up above, but they make more sense belonging to the user object so we don't have to pass
+    the user object all over the place. In fact, we should pull in more functions such as cron(), updateStats(), etc.
+  * user.ops, which is super important:
+
+If a function is inside user.ops, it has magical properties. If you call it on the client it updates the user object in
+the browser and when it's done it automatically POSTs to the server, calling src/controllers/user.js#OP_NAME (the exact same name
+of the op function). The first argument req is {query, body, params}, it's what the express controller function
+expects. This means we call our functions as if we were calling an Express route. Eg, instead of score(task, direction),
+we call score({params:{id:task.id,direction:direction}}). This also forces us to think about our routes (whether to use
+params, query, or body for variables). see http://stackoverflow.com/questions/4024271/rest-api-best-practices-where-to-put-parameters
+
+If `src/controllers/user.js#OP_NAME` doesn't exist on the server, it's automatically added. It runs the code in user.ops.OP_NAME
+to update the user model server-side, then performs `user.save()`. You can see this in action for `user.ops.buy`. That
+function doesn't exist on the server - so the client calls it, it updates user in the browser, auto-POSTs to server, server
+handles it by calling `user.ops.buy` again (to update user on the server), and then saves. We can do this for
+everything that doesn't need any code difference from what's in user.ops.OP_NAME for special-handling server-side. If we
+*do* need special handling, just add `src/controllers/user.js#OP_NAME` to override the user.ops.OP_NAME, and be
+sure to call user.ops.OP_NAME at some point within the overridden function.
+
+TODO
+  * Is this the best way to wrap the user object? I thought of using user.prototype, but user is an object not a Function.
+    user on the server is a Mongoose model, so we can use prototype - but to do it on the client, we'd probably have to
+    move to $resource for user
+  * Move to $resource!
+ */
+
+api.wrap = function(user, main) {
+  if (main == null) {
+    main = true;
+  }
+  if (user._wrapped) {
+    return;
+  }
+  user._wrapped = true;
+  if (main) {
+    user.ops = {
+      update: function(req, cb) {
+        _.each(req.body, function(v, k) {
+          user.fns.dotSet(k, v);
+          return true;
+        });
+        return typeof cb === "function" ? cb(null, user) : void 0;
+      },
+      sleep: function(req, cb) {
+        user.preferences.sleep = !user.preferences.sleep;
+        return typeof cb === "function" ? cb(null, {}) : void 0;
+      },
+      revive: function(req, cb) {
+        var item, lostItem, lostStat;
+        _.merge(user.stats, {
+          hp: 50,
+          exp: 0,
+          gp: 0
+        });
+        if (user.stats.lvl > 1) {
+          user.stats.lvl--;
+        }
+        lostStat = user.fns.randomVal(_.reduce(['str', 'con', 'per', 'int'], (function(m, k) {
+          if (user.stats[k]) {
+            m[k] = k;
+          }
+          return m;
+        }), {}));
+        if (lostStat) {
+          user.stats[lostStat]--;
+        }
+        lostItem = user.fns.randomVal(_.reduce(user.items.gear.owned, (function(m, v, k) {
+          if (v) {
+            m['' + k] = '' + k;
+          }
+          return m;
+        }), {}));
+        if (item = content.gear.flat[lostItem]) {
+          user.items.gear.owned[lostItem] = false;
+          if (user.items.gear.equipped[item.type] === lostItem) {
+            user.items.gear.equipped[item.type] = "" + item.type + "_base_0";
+          }
+          if (user.items.gear.costume[item.type] === lostItem) {
+            user.items.gear.costume[item.type] = "" + item.type + "_base_0";
+          }
+        }
+        if (typeof user.markModified === "function") {
+          user.markModified('items.gear');
+        }
+        return typeof cb === "function" ? cb((item ? {
+          code: 200,
+          message: "Your " + item.text + " broke."
+        } : null), user) : void 0;
+      },
+      reset: function(req, cb) {
+        var gear;
+        user.habits = [];
+        user.dailys = [];
+        user.todos = [];
+        user.rewards = [];
+        user.stats.hp = 50;
+        user.stats.lvl = 1;
+        user.stats.gp = 0;
+        user.stats.exp = 0;
+        gear = user.items.gear;
+        _.each(['equipped', 'costume'], function(type) {
+          gear[type].armor = 'armor_base_0';
+          gear[type].weapon = 'weapon_base_0';
+          gear[type].head = 'head_base_0';
+          return gear[type].shield = 'shield_base_0';
+        });
+        user.items.gear.owned = {
+          weapon_warrior_0: true
+        };
+        if (typeof user.markModified === "function") {
+          user.markModified('items.gear.owned');
+        }
+        user.preferences.costume = false;
+        return typeof cb === "function" ? cb(null, user) : void 0;
+      },
+      reroll: function(req, cb, ga) {
+        if (user.balance < 1) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "Not enough gems."
+          }) : void 0;
+        }
+        user.balance--;
+        _.each(user.tasks, function(task) {
+          if (task.type !== 'reward') {
+            return task.value = 0;
+          }
+        });
+        user.stats.hp = 50;
+        if (typeof cb === "function") {
+          cb(null, user);
+        }
+        return ga != null ? ga.event('purchase', 'reroll').send() : void 0;
+      },
+      rebirth: function(req, cb, ga) {
+        var flags, gear, lvl, stats;
+        if (user.balance < 2) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "Not enough gems."
+          }) : void 0;
+        }
+        user.balance -= 2;
+        lvl = user.stats.lvl;
+        _.each(user.tasks, function(task) {
+          if (task.type !== 'reward') {
+            task.value = 0;
+          }
+          if (task.type === 'daily') {
+            return task.streak = 0;
+          }
+        });
+        stats = user.stats;
+        stats.buffs = {};
+        stats.hp = 50;
+        stats.lvl = 1;
+        stats["class"] = 'warrior';
+        _.each(['per', 'int', 'con', 'str', 'points', 'gp', 'exp', 'mp'], function(value) {
+          return stats[value] = 0;
+        });
+        gear = user.items.gear;
+        _.each(['equipped', 'costume'], function(type) {
+          gear[type].armor = 'armor_base_0';
+          gear[type].weapon = 'weapon_warrior_0';
+          gear[type].head = 'head_base_0';
+          return gear[type].shield = 'shield_base_0';
+        });
+        if (user.items.currentPet) {
+          user.ops.equip({
+            params: {
+              type: 'pet',
+              key: user.items.currentPet
+            }
+          });
+        }
+        if (user.items.currentMount) {
+          user.ops.equip({
+            params: {
+              type: 'mount',
+              key: user.items.currentMount
+            }
+          });
+        }
+        _.each(gear.owned, function(v, k) {
+          if (gear.owned[k]) {
+            gear.owned[k] = false;
+            return true;
+          }
+        });
+        gear.owned.weapon_warrior_0 = true;
+        if (typeof user.markModified === "function") {
+          user.markModified('items.gear.owned');
+        }
+        user.preferences.costume = false;
+        flags = user.flags;
+        if (!(user.achievements.ultimateGear || user.achievements.beastMaster)) {
+          flags.rebirthEnabled = false;
+        }
+        flags.itemsEnabled = false;
+        flags.dropsEnabled = false;
+        flags.classSelected = false;
+        if (!user.achievements.rebirths) {
+          user.achievements.rebirths = 1;
+          user.achievements.rebirthLevel = lvl;
+        } else if (lvl > user.achievements.rebirthLevel || lvl === 100) {
+          user.achievements.rebirths++;
+          user.achievements.rebirthLevel = lvl;
+        }
+        if (typeof cb === "function") {
+          cb(null, user);
+        }
+        return ga != null ? ga.event('purchase', 'Rebirth').send() : void 0;
+      },
+      allocateNow: function(req, cb) {
+        _.times(user.stats.points, user.fns.autoAllocate);
+        user.stats.points = 0;
+        if (typeof user.markModified === "function") {
+          user.markModified('stats');
+        }
+        return typeof cb === "function" ? cb(null, user.stats) : void 0;
+      },
+      clearCompleted: function(req, cb) {
+        _.remove(user.todos, function(t) {
+          var _ref;
+          return t.completed && !((_ref = t.challenge) != null ? _ref.id : void 0);
+        });
+        if (typeof user.markModified === "function") {
+          user.markModified('todos');
+        }
+        return typeof cb === "function" ? cb(null, user.todos) : void 0;
+      },
+      sortTask: function(req, cb) {
+        var from, id, task, tasks, to, _ref;
+        id = req.params.id;
+        _ref = req.query, to = _ref.to, from = _ref.from;
+        task = user.tasks[id];
+        if (!task) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: "Task not found."
+          }) : void 0;
+        }
+        if (!((to != null) && (from != null))) {
+          return typeof cb === "function" ? cb('?to=__&from=__ are required') : void 0;
+        }
+        tasks = user["" + task.type + "s"];
+        tasks.splice(to, 0, tasks.splice(from, 1)[0]);
+        return typeof cb === "function" ? cb(null, tasks) : void 0;
+      },
+      updateTask: function(req, cb) {
+        var task, _ref;
+        if (!(task = user.tasks[(_ref = req.params) != null ? _ref.id : void 0])) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: "Task not found"
+          }) : void 0;
+        }
+        _.merge(task, _.omit(req.body, ['checklist', 'id']));
+        if (req.body.checklist) {
+          task.checklist = req.body.checklist;
+        }
+        if (typeof task.markModified === "function") {
+          task.markModified('tags');
+        }
+        return typeof cb === "function" ? cb(null, task) : void 0;
+      },
+      deleteTask: function(req, cb) {
+        var i, task, _ref;
+        task = user.tasks[(_ref = req.params) != null ? _ref.id : void 0];
+        if (!task) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: 'Task not found'
+          }) : void 0;
+        }
+        i = user[task.type + "s"].indexOf(task);
+        if (~i) {
+          user[task.type + "s"].splice(i, 1);
+        }
+        return typeof cb === "function" ? cb(null, {}) : void 0;
+      },
+      addTask: function(req, cb) {
+        var task;
+        task = api.taskDefaults(req.body);
+        user["" + task.type + "s"].unshift(task);
+        if (user.preferences.newTaskEdit) {
+          task._editing = true;
+        }
+        if (user.preferences.tagsCollapsed) {
+          task._tags = true;
+        }
+        if (user.preferences.advancedCollapsed) {
+          task._advanced = true;
+        }
+        if (typeof cb === "function") {
+          cb(null, task);
+        }
+        return task;
+      },
+      addTag: function(req, cb) {
+        if (user.tags == null) {
+          user.tags = [];
+        }
+        user.tags.push({
+          name: req.body.name,
+          id: req.body.id || api.uuid()
+        });
+        return typeof cb === "function" ? cb(null, user.tags) : void 0;
+      },
+      updateTag: function(req, cb) {
+        var i, tid;
+        tid = req.params.id;
+        i = _.findIndex(user.tags, {
+          id: tid
+        });
+        if (!~i) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: 'Tag not found'
+          }) : void 0;
+        }
+        user.tags[i].name = req.body.name;
+        return typeof cb === "function" ? cb(null, user.tags[i]) : void 0;
+      },
+      deleteTag: function(req, cb) {
+        var i, tag, tid;
+        tid = req.params.id;
+        i = _.findIndex(user.tags, {
+          id: tid
+        });
+        if (!~i) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: 'Tag not found'
+          }) : void 0;
+        }
+        tag = user.tags[i];
+        delete user.filters[tag.id];
+        user.tags.splice(i, 1);
+        _.each(user.tasks, function(task) {
+          return delete task.tags[tag.id];
+        });
+        _.each(['habits', 'dailys', 'todos', 'rewards'], function(type) {
+          return typeof user.markModified === "function" ? user.markModified(type) : void 0;
+        });
+        return typeof cb === "function" ? cb(null, user.tags) : void 0;
+      },
+      feed: function(req, cb) {
+        var egg, evolve, food, message, pet, potion, userPets, _ref, _ref1, _ref2;
+        _ref = req.params, pet = _ref.pet, food = _ref.food;
+        food = content.food[food];
+        _ref1 = pet.split('-'), egg = _ref1[0], potion = _ref1[1];
+        userPets = user.items.pets;
+        if (!userPets[pet]) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":pet not found in user.items.pets"
+          }) : void 0;
+        }
+        if (!((_ref2 = user.items.food) != null ? _ref2[food.key] : void 0)) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":food not found in user.items.food"
+          }) : void 0;
+        }
+        if (content.specialPets[pet]) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "Can't feed this pet."
+          }) : void 0;
+        }
+        if (user.items.mounts[pet]) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "You already have that mount. Try feeding another pet."
+          }) : void 0;
+        }
+        message = '';
+        evolve = function() {
+          userPets[pet] = -1;
+          user.items.mounts[pet] = true;
+          if (pet === user.items.currentPet) {
+            user.items.currentPet = "";
+          }
+          return message = "You have tamed " + egg + ", let's go for a ride!";
+        };
+        if (food.key === 'Saddle') {
+          evolve();
+        } else {
+          if (food.target === potion) {
+            userPets[pet] += 5;
+            message = "" + egg + " really likes the " + food.text + "!";
+          } else {
+            userPets[pet] += 2;
+            message = "" + egg + " eats the " + food.text + " but doesn't seem to enjoy it.";
+          }
+          if (userPets[pet] >= 50 && !user.items.mounts[pet]) {
+            evolve();
+          }
+        }
+        user.items.food[food.key]--;
+        return typeof cb === "function" ? cb({
+          code: 200,
+          message: message
+        }, userPets[pet]) : void 0;
+      },
+      purchase: function(req, cb, ga) {
+        var item, key, type, _ref;
+        _ref = req.params, type = _ref.type, key = _ref.key;
+        if (type !== 'eggs' && type !== 'hatchingPotions' && type !== 'food' && type !== 'quests' && type !== 'special') {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":type must be in [hatchingPotions,eggs,food,quests,special]"
+          }, req) : void 0;
+        }
+        item = content[type][key];
+        if (!item) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":key not found for Content." + type
+          }, req) : void 0;
+        }
+        if (user.balance < (item.value / 4)) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: 'Not enough gems.'
+          }) : void 0;
+        }
+        if (!user.items[type][key]) {
+          user.items[type][key] = 0;
+        }
+        user.items[type][key]++;
+        user.balance -= item.value / 4;
+        if (typeof cb === "function") {
+          cb(null, _.pick(user, $w('items balance')));
+        }
+        return ga != null ? ga.event('purchase', key).send() : void 0;
+      },
+      buy: function(req, cb) {
+        var item, key, message;
+        key = req.params.key;
+        item = key === 'potion' ? content.potion : content.gear.flat[key];
+        if (!item) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: "Item '" + key + " not found (see https://github.com/HabitRPG/habitrpg-shared/blob/develop/script/content.coffee)"
+          }) : void 0;
+        }
+        if (user.stats.gp < item.value) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: 'Not enough gold.'
+          }) : void 0;
+        }
+        if (item.key === 'potion') {
+          user.stats.hp += 15;
+          if (user.stats.hp > 50) {
+            user.stats.hp = 50;
+          }
+        } else {
+          user.items.gear.equipped[item.type] = item.key;
+          user.items.gear.owned[item.key] = true;
+          message = user.fns.handleTwoHanded(item);
+          if (message == null) {
+            message = "Bought " + item.text + ".";
+          }
+          if (!user.achievements.ultimateGear && item.last) {
+            user.fns.ultimateGear();
+          }
+        }
+        user.stats.gp -= item.value;
+        return typeof cb === "function" ? cb({
+          code: 200,
+          message: message
+        }, _.pick(user, $w('items achievements stats'))) : void 0;
+      },
+      sell: function(req, cb) {
+        var key, type, _ref;
+        _ref = req.params, key = _ref.key, type = _ref.type;
+        if (type !== 'eggs' && type !== 'hatchingPotions' && type !== 'food') {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":type not found. Must bes in [eggs, hatchingPotions, food]"
+          }) : void 0;
+        }
+        if (!user.items[type][key]) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: ":key not found for user.items." + type
+          }) : void 0;
+        }
+        user.items[type][key]--;
+        user.stats.gp += content[type][key].value;
+        return typeof cb === "function" ? cb(null, _.pick(user, $w('stats items'))) : void 0;
+      },
+      equip: function(req, cb) {
+        var item, key, message, type, _ref;
+        _ref = [req.params.type || 'equipped', req.params.key], type = _ref[0], key = _ref[1];
+        switch (type) {
+          case 'mount':
+            user.items.currentMount = user.items.currentMount === key ? '' : key;
+            break;
+          case 'pet':
+            user.items.currentPet = user.items.currentPet === key ? '' : key;
+            break;
+          case 'costume':
+          case 'equipped':
+            item = content.gear.flat[key];
+            if (user.items.gear[type][item.type] === key) {
+              user.items.gear[type][item.type] = "" + item.type + "_base_0";
+              message = "" + item.text + " un-equipped.";
+            } else {
+              user.items.gear[type][item.type] = item.key;
+              message = user.fns.handleTwoHanded(item, type);
+            }
+        }
+        return typeof cb === "function" ? cb((message ? {
+          code: 200,
+          message: message
+        } : null), user.items) : void 0;
+      },
+      hatch: function(req, cb) {
+        var egg, hatchingPotion, pet, _ref;
+        _ref = req.params, egg = _ref.egg, hatchingPotion = _ref.hatchingPotion;
+        if (!(egg && hatchingPotion)) {
+          return typeof cb === "function" ? cb({
+            code: 404,
+            message: "Please specify query.egg & query.hatchingPotion"
+          }) : void 0;
+        }
+        if (!(user.items.eggs[egg] > 0 && user.items.hatchingPotions[hatchingPotion] > 0)) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "You're missing either that egg or that potion"
+          }) : void 0;
+        }
+        pet = "" + egg + "-" + hatchingPotion;
+        if (user.items.pets[pet] && user.items.pets[pet] > 0) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "You already have that pet. Try hatching a different combination!"
+          }) : void 0;
+        }
+        user.items.pets[pet] = 5;
+        user.items.eggs[egg]--;
+        user.items.hatchingPotions[hatchingPotion]--;
+        return typeof cb === "function" ? cb({
+          code: 200,
+          message: "Your egg hatched! Visit your stable to equip your pet."
+        }, user.items) : void 0;
+      },
+      unlock: function(req, cb, ga) {
+        var alreadyOwns, cost, fullSet, k, path, split, v;
+        path = req.query.path;
+        fullSet = ~path.indexOf(",");
+        cost = fullSet ? 1.25 : 0.5;
+        alreadyOwns = !fullSet && user.fns.dotGet("purchased." + path) === true;
+        if (user.balance < cost && !alreadyOwns) {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: "Not enough gems"
+          }) : void 0;
+        }
+        if (fullSet) {
+          _.each(path.split(","), function(p) {
+            user.fns.dotSet("purchased." + p, true);
+            return true;
+          });
+        } else {
+          if (alreadyOwns) {
+            split = path.split('.');
+            v = split.pop();
+            k = split.join('.');
+            user.fns.dotSet("preferences." + k, v);
+            return typeof cb === "function" ? cb(null, req) : void 0;
+          }
+          user.fns.dotSet("purchased." + path, true);
+        }
+        user.balance -= cost;
+        if (typeof user.markModified === "function") {
+          user.markModified('purchased');
+        }
+        if (typeof cb === "function") {
+          cb(null, _.pick(user, $w('purchased preferences')));
+        }
+        return ga != null ? ga.event('purchase', path).send() : void 0;
+      },
+      changeClass: function(req, cb, ga) {
+        var klass, _ref;
+        klass = (_ref = req.query) != null ? _ref["class"] : void 0;
+        if (klass === 'warrior' || klass === 'rogue' || klass === 'wizard' || klass === 'healer') {
+          user.stats["class"] = klass;
+          user.flags.classSelected = true;
+          _.each(["weapon", "armor", "shield", "head"], function(type) {
+            var foundKey;
+            foundKey = false;
+            _.findLast(user.items.gear.owned, function(v, k) {
+              if (~k.indexOf(type + "_" + klass) && v === true) {
+                return foundKey = k;
+              }
+            });
+            user.items.gear.equipped[type] = foundKey ? foundKey : type === "weapon" ? "weapon_" + klass + "_0" : type === "shield" && klass === "rogue" ? "shield_rogue_0" : "" + type + "_base_0";
+            if (type === "weapon" || (type === "shield" && klass === "rogue")) {
+              user.items.gear.owned["" + type + "_" + klass + "_0"] = true;
+            }
+            return true;
+          });
+        } else {
+          if (user.preferences.disableClasses) {
+            user.preferences.disableClasses = false;
+            user.preferences.autoAllocate = false;
+          } else {
+            if (!(user.balance >= .75)) {
+              return typeof cb === "function" ? cb({
+                code: 401,
+                message: "Not enough gems"
+              }) : void 0;
+            }
+            user.balance -= .75;
+          }
+          _.merge(user.stats, {
+            str: 0,
+            con: 0,
+            per: 0,
+            int: 0,
+            points: user.stats.lvl
+          });
+          user.flags.classSelected = false;
+          if (ga != null) {
+            ga.event('purchase', 'changeClass').send();
+          }
+        }
+        return typeof cb === "function" ? cb(null, _.pick(user, $w('stats flags items preferences'))) : void 0;
+      },
+      disableClasses: function(req, cb) {
+        user.stats["class"] = 'warrior';
+        user.flags.classSelected = true;
+        user.preferences.disableClasses = true;
+        user.preferences.autoAllocate = true;
+        user.stats.str = user.stats.lvl;
+        user.stats.points = 0;
+        return typeof cb === "function" ? cb(null, _.pick(user, $w('stats flags preferences'))) : void 0;
+      },
+      allocate: function(req, cb) {
+        var stat;
+        stat = req.query.stat || 'str';
+        if (user.stats.points > 0) {
+          user.stats[stat]++;
+          user.stats.points--;
+          if (stat === 'int') {
+            user.stats.mp++;
+          }
+        }
+        return typeof cb === "function" ? cb(null, _.pick(user, $w('stats'))) : void 0;
+      },
+      readValentine: function(req, cb) {
+        user.items.special.valentineReceived.shift();
+        if (typeof user.markModified === "function") {
+          user.markModified('items.special.valentineReceived');
+        }
+        return typeof cb === "function" ? cb(null, 'items.special') : void 0;
+      },
+      score: function(req, cb) {
+        var addPoints, calculateDelta, delta, direction, id, mpDelta, multiplier, num, options, stats, subtractPoints, task, th, _ref;
+        _ref = req.params, id = _ref.id, direction = _ref.direction;
+        task = user.tasks[id];
+        options = req.query || {};
+        _.defaults(options, {
+          times: 1,
+          cron: false
+        });
+        user._tmp = {};
+        stats = {
+          gp: +user.stats.gp,
+          hp: +user.stats.hp,
+          exp: +user.stats.exp
+        };
+        task.value = +task.value;
+        task.streak = ~~task.streak;
+        if (task.priority == null) {
+          task.priority = 1;
+        }
+        if (task.value > stats.gp && task.type === 'reward') {
+          return typeof cb === "function" ? cb({
+            code: 401,
+            message: 'Not enough Gold'
+          }) : void 0;
+        }
+        delta = 0;
+        calculateDelta = function() {
+          return _.times(options.times, function() {
+            var currVal, nextDelta, _ref1, _ref2;
+            currVal = task.value < -47.27 ? -47.27 : task.value > 21.27 ? 21.27 : task.value;
+            nextDelta = Math.pow(0.9747, currVal) * (direction === 'down' ? -1 : 1);
+            if (((_ref1 = task.checklist) != null ? _ref1.length : void 0) > 0) {
+              if (direction === 'down' && task.type === 'daily' && options.cron) {
+                nextDelta *= 1 - _.reduce(task.checklist, (function(m, i) {
+                  return m + (i.completed ? 1 : 0);
+                }), 0) / task.checklist.length;
+              }
+              if (task.type === 'todo' && direction === 'up') {
+                nextDelta *= 1 + _.reduce(task.checklist, (function(m, i) {
+                  return m + (i.completed ? 1 : 0);
+                }), 0);
+              }
+            }
+            if (task.type !== 'reward') {
+              if (user.preferences.automaticAllocation === true && user.preferences.allocationMode === 'taskbased' && !(task.type === 'todo' && direction === 'down')) {
+                user.stats.training[task.attribute] += nextDelta;
+              }
+              if (direction === 'up' && !(task.type === 'habit' && !task.down)) {
+                user.party.quest.progress.up = user.party.quest.progress.up || 0;
+                if ((_ref2 = task.type) === 'daily' || _ref2 === 'todo') {
+                  user.party.quest.progress.up += nextDelta * (1 + (user._statsComputed.str / 200));
+                }
+              }
+              task.value += nextDelta;
+            }
+            return delta += nextDelta;
+          });
+        };
+        addPoints = function() {
+          var afterStreak, gpMod, intBonus, perBonus, streakBonus, _crit;
+          _crit = (delta > 0 ? user.fns.crit() : 1);
+          if (_crit > 1) {
+            user._tmp.crit = _crit;
+          }
+          intBonus = 1 + (user._statsComputed.int * .025);
+          stats.exp += Math.round(delta * intBonus * task.priority * _crit * 6);
+          perBonus = 1 + user._statsComputed.per * .02;
+          gpMod = delta * task.priority * _crit * perBonus;
+          return stats.gp += task.streak ? (streakBonus = task.streak / 100 + 1, afterStreak = gpMod * streakBonus, gpMod > 0 ? user._tmp.streakBonus = afterStreak - gpMod : void 0, afterStreak) : gpMod;
+        };
+        subtractPoints = function() {
+          var conBonus, hpMod;
+          conBonus = 1 - (user._statsComputed.con / 250);
+          if (conBonus < .1) {
+            conBonus = 0.1;
+          }
+          hpMod = delta * conBonus * task.priority * 2;
+          return stats.hp += Math.round(hpMod * 10) / 10;
+        };
+        switch (task.type) {
+          case 'habit':
+            calculateDelta();
+            if (delta > 0) {
+              addPoints();
+            } else {
+              subtractPoints();
+            }
+            th = (task.history != null ? task.history : task.history = []);
+            if (th[th.length - 1] && moment(th[th.length - 1].date).isSame(new Date, 'day')) {
+              th[th.length - 1].value = task.value;
+            } else {
+              th.push({
+                date: +(new Date),
+                value: task.value
+              });
+            }
+            if (typeof user.markModified === "function") {
+              user.markModified("habits." + (_.findIndex(user.habits, {
+                id: task.id
+              })) + ".history");
+            }
+            break;
+          case 'daily':
+            if (options.cron) {
+              calculateDelta();
+              subtractPoints();
+              if (!user.stats.buffs.streaks) {
+                task.streak = 0;
+              }
+            } else {
+              calculateDelta();
+              addPoints();
+              if (direction === 'up') {
+                task.streak = task.streak ? task.streak + 1 : 1;
+                if ((task.streak % 21) === 0) {
+                  user.achievements.streak = user.achievements.streak ? user.achievements.streak + 1 : 1;
+                }
+              } else {
+                if ((task.streak % 21) === 0) {
+                  user.achievements.streak = user.achievements.streak ? user.achievements.streak - 1 : 0;
+                }
+                task.streak = task.streak ? task.streak - 1 : 0;
+              }
+            }
+            break;
+          case 'todo':
+            if (options.cron) {
+              calculateDelta();
+            } else {
+              task.dateCompleted = direction === 'up' ? new Date : void 0;
+              calculateDelta();
+              addPoints();
+              multiplier = _.max([
+                _.reduce(task.checklist, (function(m, i) {
+                  return m + (i.completed ? 1 : 0);
+                }), 1), 1
+              ]);
+              mpDelta = _.max([multiplier, .01 * user._statsComputed.maxMP * multiplier]);
+              if (direction === 'down') {
+                mpDelta *= -1;
+              }
+              user.stats.mp += mpDelta;
+              if (user.stats.mp >= user._statsComputed.maxMP) {
+                user.stats.mp = user._statsComputed.maxMP;
+              }
+              if (user.stats.mp < 0) {
+                user.stats.mp = 0;
+              }
+            }
+            break;
+          case 'reward':
+            calculateDelta();
+            stats.gp -= Math.abs(task.value);
+            num = parseFloat(task.value).toFixed(2);
+            if (stats.gp < 0) {
+              stats.hp += stats.gp;
+              stats.gp = 0;
+            }
+        }
+        user.fns.updateStats(stats);
+        if (typeof window === 'undefined') {
+          if (direction === 'up') {
+            user.fns.randomDrop({
+              task: task,
+              delta: delta
+            });
+          }
+        }
+        if (typeof cb === "function") {
+          cb(null, user);
+        }
+        return delta;
+      }
+    };
+  }
+  user.fns = {
+    getItem: function(type) {
+      var item;
+      item = content.gear.flat[user.items.gear.equipped[type]];
+      if (!item) {
+        return content.gear.flat["" + type + "_base_0"];
+      }
+      return item;
+    },
+    handleTwoHanded: function(item, type) {
+      var message, weapon, _ref;
+      if (type == null) {
+        type = 'equipped';
+      }
+      if (item.type === "shield" && ((_ref = (weapon = content.gear.flat[user.items.gear[type].weapon])) != null ? _ref.twoHanded : void 0)) {
+        user.items.gear[type].weapon = 'weapon_base_0';
+        message = "" + weapon.text + " is two-handed";
+      }
+      if (item.twoHanded) {
+        user.items.gear[type].shield = "shield_base_0";
+        message = "" + item.text + " is two-handed";
+      }
+      return message;
+    },
+
+    /*
+    Because the same op needs to be performed on the client and the server (critical hits, item drops, etc),
+    we need things to be "random", but technically predictable so that they don't go out-of-sync
+     */
+    predictableRandom: function(seed) {
+      var x;
+      if (!seed || seed === Math.PI) {
+        seed = _.reduce(user.stats, (function(m, v) {
+          if (_.isNumber(v)) {
+            return m + v;
+          } else {
+            return m;
+          }
+        }), 0);
+      }
+      x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    },
+    crit: function(stat, chance) {
+      if (stat == null) {
+        stat = 'str';
+      }
+      if (chance == null) {
+        chance = .03;
+      }
+      if (user.fns.predictableRandom() <= chance * (1 + user._statsComputed[stat] / 100)) {
+        return 1.5 + (.02 * user._statsComputed[stat]);
+      } else {
+        return 1;
+      }
+    },
+
+    /*
+      Get a random property from an object
+      returns random property (the value)
+     */
+    randomVal: function(obj, options) {
+      var array, rand;
+      array = (options != null ? options.key : void 0) ? _.keys(obj) : _.values(obj);
+      rand = user.fns.predictableRandom(typeof option !== "undefined" && option !== null ? option.seed : void 0);
+      return array[Math.floor(rand * array.length)];
+    },
+
+    /*
+    This allows you to set object properties by dot-path. Eg, you can run pathSet('stats.hp',50,user) which is the same as
+    user.stats.hp = 50. This is useful because in our habitrpg-shared functions we're returning changesets as {path:value},
+    so that different consumers can implement setters their own way. Derby needs model.set(path, value) for example, where
+    Angular sets object properties directly - in which case, this function will be used.
+     */
+    dotSet: function(path, val) {
+      var arr;
+      arr = path.split('.');
+      return _.reduce(arr, (function(_this) {
+        return function(curr, next, index) {
+          if ((arr.length - 1) === index) {
+            curr[next] = val;
+          }
+          return curr[next] != null ? curr[next] : curr[next] = {};
+        };
+      })(this), user);
+    },
+    dotGet: function(path) {
+      return _.reduce(path.split('.'), ((function(_this) {
+        return function(curr, next) {
+          return curr != null ? curr[next] : void 0;
+        };
+      })(this)), user);
+    },
+    randomDrop: function(modifiers) {
+      var acceptableDrops, chance, drop, dropK, quest, rarity, task, _base, _base1, _base2, _name, _name1, _name2, _ref, _ref1;
+      task = modifiers.task;
+      chance = _.min([Math.abs(task.value - 21.27), 37.5]) / 150 + .02;
+      chance *= task.priority * (1 + (task.streak / 100 || 0)) * (1 + (user._statsComputed.per / 100)) * (1 + (user.contributor.level / 20 || 0)) * (1 + (user.achievements.rebirths / 20 || 0)) * (1 + (user.achievements.streak / 200 || 0)) * (user._tmp.crit || 1) * (1 + .5 * (_.reduce(task.checklist, (function(m, i) {
+        return m + (i.completed ? 1 : 0);
+      }), 0) || 0));
+      chance = api.diminishingReturns(chance, 0.75);
+      quest = content.quests[(_ref = user.party.quest) != null ? _ref.key : void 0];
+      if ((quest != null ? quest.collect : void 0) && user.fns.predictableRandom(user.stats.gp) < chance) {
+        dropK = user.fns.randomVal(quest.collect, {
+          key: true
+        });
+        user.party.quest.progress.collect[dropK]++;
+        if (typeof user.markModified === "function") {
+          user.markModified('party.quest.progress');
+        }
+      }
+      if ((api.daysSince(user.items.lastDrop.date, user.preferences) === 0) && (user.items.lastDrop.count >= 5 + Math.floor(user._statsComputed.per / 25))) {
+        return;
+      }
+      if (((_ref1 = user.flags) != null ? _ref1.dropsEnabled : void 0) && user.fns.predictableRandom(user.stats.exp) < chance) {
+        rarity = user.fns.predictableRandom(user.stats.gp);
+        if (rarity > .6) {
+          drop = user.fns.randomVal(_(content.food).omit('Saddle').where({
+            canBuy: true
+          }).value());
+          if ((_base = user.items.food)[_name = drop.key] == null) {
+            _base[_name] = 0;
+          }
+          user.items.food[drop.key] += 1;
+          drop.type = 'Food';
+          drop.dialog = "You've found " + drop.article + drop.text + "! " + drop.notes;
+        } else if (rarity > .3) {
+          drop = user.fns.randomVal(_.where(content.eggs, {
+            canBuy: true
+          }));
+          if ((_base1 = user.items.eggs)[_name1 = drop.key] == null) {
+            _base1[_name1] = 0;
+          }
+          user.items.eggs[drop.key]++;
+          drop.type = 'Egg';
+          drop.dialog = "You've found a " + drop.text + " Egg! " + drop.notes;
+        } else {
+          acceptableDrops = rarity < .02 ? ['Golden'] : rarity < .09 ? ['Zombie', 'CottonCandyPink', 'CottonCandyBlue'] : rarity < .18 ? ['Red', 'Shade', 'Skeleton'] : ['Base', 'White', 'Desert'];
+          drop = user.fns.randomVal(_.pick(content.hatchingPotions, (function(v, k) {
+            return __indexOf.call(acceptableDrops, k) >= 0;
+          })));
+          if ((_base2 = user.items.hatchingPotions)[_name2 = drop.key] == null) {
+            _base2[_name2] = 0;
+          }
+          user.items.hatchingPotions[drop.key]++;
+          drop.type = 'HatchingPotion';
+          drop.dialog = "You've found a " + drop.text + " Hatching Potion! " + drop.notes;
+        }
+        user._tmp.drop = drop;
+        user.items.lastDrop.date = +(new Date);
+        return user.items.lastDrop.count++;
+      }
+    },
+
+    /*
+      Updates user stats with new stats. Handles death, leveling up, etc
+      {stats} new stats
+      {update} if aggregated changes, pass in userObj as update. otherwise commits will be made immediately
+     */
+    autoAllocate: function() {
+      return user.stats[(function() {
+        var diff, ideal, preference, stats, suggested;
+        switch (user.preferences.allocationMode) {
+          case "flat":
+            stats = _.pick(user.stats, $w('con str per int'));
+            return _.invert(stats)[_.min(stats)];
+          case "classbased":
+            ideal = [user.stats.lvl / 7 * 3, user.stats.lvl / 7 * 2, user.stats.lvl / 7, user.stats.lvl / 7];
+            preference = (function() {
+              switch (user.stats["class"]) {
+                case "wizard":
+                  return ["int", "per", "con", "str"];
+                case "rogue":
+                  return ["per", "str", "int", "con"];
+                case "healer":
+                  return ["con", "int", "str", "per"];
+                default:
+                  return ["str", "con", "per", "int"];
+              }
+            })();
+            diff = [user.stats[preference[0]] - ideal[0], user.stats[preference[1]] - ideal[1], user.stats[preference[2]] - ideal[2], user.stats[preference[3]] - ideal[3]];
+            suggested = _.findIndex(diff, (function(val) {
+              if (val === _.min(diff)) {
+                return true;
+              }
+            }));
+            if (~suggested) {
+              return preference[suggested];
+            } else {
+              return "str";
+            }
+          case "taskbased":
+            suggested = _.invert(user.stats.training)[_.max(user.stats.training)];
+            _.merge(user.stats.training, {
+              str: 0,
+              int: 0,
+              con: 0,
+              per: 0
+            });
+            return suggested || "str";
+          default:
+            return "str";
+        }
+      })()]++;
+    },
+    updateStats: function(stats) {
+      var tnl, _base, _base1, _ref;
+      if (stats.hp <= 0) {
+        return user.stats.hp = 0;
+      }
+      user.stats.hp = stats.hp;
+      user.stats.gp = stats.gp >= 0 ? stats.gp : 0;
+      tnl = api.tnl(user.stats.lvl);
+      if (user.stats.lvl >= 100) {
+        stats.gp += stats.exp / 15;
+        stats.exp = 0;
+        user.stats.lvl = 100;
+      } else {
+        if (stats.exp >= tnl) {
+          user.stats.exp = stats.exp;
+          while (stats.exp >= tnl && user.stats.lvl < 100) {
+            stats.exp -= tnl;
+            user.stats.lvl++;
+            tnl = api.tnl(user.stats.lvl);
+            if (user.preferences.automaticAllocation) {
+              user.fns.autoAllocate();
+            } else {
+              user.stats.points = user.stats.lvl - (user.stats.con + user.stats.str + user.stats.per + user.stats.int);
+            }
+          }
+          if (user.stats.lvl === 100) {
+            stats.exp = 0;
+          }
+          user.stats.hp = 50;
+        }
+      }
+      user.stats.exp = stats.exp;
+      if (user.flags == null) {
+        user.flags = {};
+      }
+      if (!user.flags.customizationsNotification && (user.stats.exp > 10 || user.stats.lvl > 1)) {
+        user.flags.customizationsNotification = true;
+      }
+      if (!user.flags.itemsEnabled && user.stats.lvl >= 2) {
+        user.flags.itemsEnabled = true;
+      }
+      if (!user.flags.partyEnabled && user.stats.lvl >= 3) {
+        user.flags.partyEnabled = true;
+      }
+      if (!user.flags.dropsEnabled && user.stats.lvl >= 4) {
+        user.flags.dropsEnabled = true;
+        if (user.items.eggs["Wolf"] > 0) {
+          user.items.eggs["Wolf"]++;
+        } else {
+          user.items.eggs["Wolf"] = 1;
+        }
+      }
+      if (!user.flags.classSelected && user.stats.lvl >= 10) {
+        user.flags.classSelected;
+      }
+      if (!((_ref = user.flags.levelDrops) != null ? _ref.vice1 : void 0) && user.stats.lvl >= 30) {
+        if ((_base = user.items.quests).vice1 == null) {
+          _base.vice1 = 0;
+        }
+        user.items.quests.vice1++;
+        ((_base1 = user.flags).levelDrops != null ? _base1.levelDrops : _base1.levelDrops = {}).vice1 = true;
+        if (typeof user.markModified === "function") {
+          user.markModified('flags.levelDrops');
+        }
+        user._tmp.drop = _.defaults(content.quests.vice1, {
+          type: 'Quest',
+          dialog: "You've found the quest \"" + content.quests.vice1.text + "\"!"
+        });
+      }
+      if (!user.flags.rebirthEnabled && (user.stats.lvl >= 50 || user.achievements.ultimateGear || user.achievements.beastMaster)) {
+        return user.flags.rebirthEnabled = true;
+      }
+    },
+
+    /*
+      ------------------------------------------------------
+      Cron
+      ------------------------------------------------------
+     */
+
+    /*
+      At end of day, add value to all incomplete Daily & Todo tasks (further incentive)
+      For incomplete Dailys, deduct experience
+      Make sure to run this function once in a while as server will not take care of overnight calculations.
+      And you have to run it every time client connects.
+      {user}
+     */
+    cron: function(options) {
+      var clearBuffs, daysMissed, expTally, lvl, lvlDiv2, now, perfect, progress, todoTally, _base, _base1, _base2, _base3, _progress;
+      if (options == null) {
+        options = {};
+      }
+      now = +options.now || +(new Date);
+      daysMissed = api.daysSince(user.lastCron, _.defaults({
+        now: now
+      }, user.preferences));
+      if (!(daysMissed > 0)) {
+        return;
+      }
+      user.auth.timestamps.loggedin = new Date();
+      user.lastCron = now;
+      if (user.items.lastDrop.count > 0) {
+        user.items.lastDrop.count = 0;
+      }
+      user.stats.mp += _.max([10, .1 * user._statsComputed.maxMP]);
+      if (user.stats.mp > user._statsComputed.maxMP) {
+        user.stats.mp = user._statsComputed.maxMP;
+      }
+      perfect = true;
+      clearBuffs = {
+        str: 0,
+        int: 0,
+        per: 0,
+        con: 0,
+        stealth: 0,
+        streaks: false
+      };
+      if (user.preferences.sleep === true) {
+        user.stats.buffs = clearBuffs;
+        return;
+      }
+      todoTally = 0;
+      if ((_base = user.party.quest.progress).down == null) {
+        _base.down = 0;
+      }
+      user.todos.concat(user.dailys).forEach(function(task) {
+        var absVal, completed, delta, id, repeat, scheduleMisses, type;
+        if (!task) {
+          return;
+        }
+        id = task.id, type = task.type, completed = task.completed, repeat = task.repeat;
+        if ((type === 'daily') && !completed && user.stats.buffs.stealth && user.stats.buffs.stealth--) {
+          return;
+        }
+        if (!completed) {
+          scheduleMisses = daysMissed;
+          if ((type === 'daily') && repeat) {
+            scheduleMisses = 0;
+            _.times(daysMissed, function(n) {
+              var thatDay;
+              thatDay = moment(now).subtract('days', n + 1);
+              if (api.shouldDo(thatDay, repeat, user.preferences)) {
+                return scheduleMisses++;
+              }
+            });
+          }
+          if (scheduleMisses > 0) {
+            if (type === 'daily') {
+              perfect = false;
+            }
+            delta = user.ops.score({
+              params: {
+                id: task.id,
+                direction: 'down'
+              },
+              query: {
+                times: scheduleMisses,
+                cron: true
+              }
+            });
+            if (type === 'daily') {
+              user.party.quest.progress.down += delta;
+            }
+          }
+        }
+        switch (type) {
+          case 'daily':
+            (task.history != null ? task.history : task.history = []).push({
+              date: +(new Date),
+              value: task.value
+            });
+            task.completed = false;
+            return _.each(task.checklist, (function(i) {
+              i.completed = false;
+              return true;
+            }));
+          case 'todo':
+            absVal = completed ? Math.abs(task.value) : task.value;
+            return todoTally += absVal;
+        }
+      });
+      user.habits.forEach(function(task) {
+        if (task.up === false || task.down === false) {
+          if (Math.abs(task.value) < 0.1) {
+            return task.value = 0;
+          } else {
+            return task.value = task.value / 2;
+          }
+        }
+      });
+      ((_base1 = (user.history != null ? user.history : user.history = {})).todos != null ? _base1.todos : _base1.todos = []).push({
+        date: now,
+        value: todoTally
+      });
+      expTally = user.stats.exp;
+      lvl = 0;
+      while (lvl < (user.stats.lvl - 1)) {
+        lvl++;
+        expTally += api.tnl(lvl);
+      }
+      ((_base2 = user.history).exp != null ? _base2.exp : _base2.exp = []).push({
+        date: now,
+        value: expTally
+      });
+      user.fns.preenUserHistory();
+      if (typeof user.markModified === "function") {
+        user.markModified('history');
+      }
+      if (typeof user.markModified === "function") {
+        user.markModified('dailys');
+      }
+      user.stats.buffs = perfect ? ((_base3 = user.achievements).perfect != null ? _base3.perfect : _base3.perfect = 0, user.achievements.perfect++, lvlDiv2 = Math.ceil(user.stats.lvl / 2), {
+        str: lvlDiv2,
+        int: lvlDiv2,
+        per: lvlDiv2,
+        con: lvlDiv2,
+        stealth: 0,
+        streaks: false
+      }) : clearBuffs;
+      progress = user.party.quest.progress;
+      _progress = _.cloneDeep(progress);
+      _.merge(progress, {
+        down: 0,
+        up: 0
+      });
+      progress.collect = _.transform(progress.collect, (function(m, v, k) {
+        return m[k] = 0;
+      }));
+      return _progress;
+    },
+    preenUserHistory: function(minHistLen) {
+      if (minHistLen == null) {
+        minHistLen = 7;
+      }
+      _.each(user.habits.concat(user.dailys), function(task) {
+        var _ref;
+        if (((_ref = task.history) != null ? _ref.length : void 0) > minHistLen) {
+          task.history = preenHistory(task.history);
+        }
+        return true;
+      });
+      _.defaults(user.history, {
+        todos: [],
+        exp: []
+      });
+      if (user.history.exp.length > minHistLen) {
+        user.history.exp = preenHistory(user.history.exp);
+      }
+      if (user.history.todos.length > minHistLen) {
+        return user.history.todos = preenHistory(user.history.todos);
+      }
+    },
+    ultimateGear: function() {
+      var gear, lastGearClassTypeMatrix, ownedLastGear, shouldGrant;
+      gear = typeof window !== "undefined" && window !== null ? user.items.gear.owned : user.items.gear.owned.toObject();
+      ownedLastGear = _.chain(content.gear.flat).pick(_.keys(gear)).values().filter(function(gear) {
+        return gear.last;
+      });
+      lastGearClassTypeMatrix = {};
+      _.each(content.classes, function(klass) {
+        lastGearClassTypeMatrix[klass] = {};
+        return _.each(['armor', 'weapon', 'shield', 'head'], function(type) {
+          lastGearClassTypeMatrix[klass][type] = false;
+          return true;
+        });
+      });
+      ownedLastGear.each(function(gear) {
+        if (gear.twoHanded) {
+          lastGearClassTypeMatrix[gear.klass]["shield"] = true;
+        }
+        return lastGearClassTypeMatrix[gear.klass][gear.type] = true;
+      });
+      shouldGrant = _(lastGearClassTypeMatrix).values().reduce((function(ans, klass) {
+        return ans || _(klass).values().reduce((function(ans, gearType) {
+          return ans && gearType;
+        }), true);
+      }), false).valueOf();
+      return user.achievements.ultimateGear = shouldGrant;
+    }
+  };
+  Object.defineProperty(user, '_statsComputed', {
+    get: function() {
+      var computed;
+      computed = _.reduce(['per', 'con', 'str', 'int'], (function(_this) {
+        return function(m, stat) {
+          m[stat] = _.reduce($w('stats stats.buffs items.gear.equipped.weapon items.gear.equipped.armor items.gear.equipped.head items.gear.equipped.shield'), function(m2, path) {
+            var item, val;
+            val = user.fns.dotGet(path);
+            return m2 + (~path.indexOf('items.gear') ? (item = content.gear.flat[val], (+(item != null ? item[stat] : void 0) || 0) * ((item != null ? item.klass : void 0) === user.stats["class"] || (item != null ? item.specialClass : void 0) === user.stats["class"] ? 1.5 : 1)) : +val[stat] || 0);
+          }, 0);
+          m[stat] += (user.stats.lvl - 1) / 2;
+          return m;
+        };
+      })(this), {});
+      computed.maxMP = computed.int * 2 + 30;
+      return computed;
+    }
+  });
+  return Object.defineProperty(user, 'tasks', {
+    get: function() {
+      var tasks;
+      tasks = user.habits.concat(user.dailys).concat(user.todos).concat(user.rewards);
+      return _.object(_.pluck(tasks, "id"), tasks);
+    }
+  });
+};

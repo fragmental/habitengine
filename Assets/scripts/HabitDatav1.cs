@@ -39,8 +39,21 @@ public class HabitDatav1
     {
         get { return root["habits"]; }
     }
-	
-	
+
+	public JSONNode Dailies
+	{
+		get { return root["dailys"]; }
+	}
+
+	public JSONNode Todos
+	{
+		get { return root["todos"]; }
+	}
+
+	public JSONNode Rewards
+	{
+		get { return root["rewards"]; }
+	}
 	/*public bool setupData(JSONNode data) 
 	{
 	try 
