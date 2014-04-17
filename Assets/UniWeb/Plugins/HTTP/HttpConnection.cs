@@ -1,7 +1,7 @@
-
 using System;
-using LostPolygon.System.Net.Sockets;
+using System.Net.Sockets;
 using System.IO;
+
 
 namespace HTTP
 {
@@ -9,7 +9,11 @@ namespace HTTP
     {
         public string host;
         public int port;
+#if UNITY_WP8
+        public SocketEx.TcpClient client = null;
+#else
         public TcpClient client = null;
+#endif
         public Stream stream = null;
         
         public HttpConnection ()
@@ -19,15 +23,25 @@ namespace HTTP
         
         public void Connect ()
         {
+#if UNITY_WP8
+            client = new SocketEx.TcpClient ();
+#else
             client = new TcpClient ();
+#endif
+
             client.Connect (host, port);
         }
 
         public void Dispose ()
         {
             stream.Dispose ();
-            client.Close ();
-            client.Client.Close ();
+#if UNITY_WP8
+            client.Dispose ();
+#else
+
+#endif
+
+
         }
         
     }

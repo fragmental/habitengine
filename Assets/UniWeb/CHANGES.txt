@@ -1,3 +1,24 @@
+-08/04/2014
+Added a tiny embeddable web server with REST style components.
+UniWeb now includes the UniExtender package in DLL form. Source code is available.
+See: https://www.assetstore.unity3d.com/#/content/2597
+
+-03/04/2014
+Added new TcpClient from SocketEx, and BouncyCastle crypto library.
+This means we should have full WP8 support!
+
+-24/03/2014
+Corrected proxy support on mobile devices.
+
+-07/03/2014
+Added proxy support.
+Added FAQ.
+
+- 28/02/2014
+Added demo server scripts for nodejs.
+Added exception feedback to WebSocket.
+Added SocketIOClient and WebSocketClient examples.
+
 - 03/01/2014
 Added default Accept header if not specified.
 Removed Authorisation header if uri.UserInfo is null or == ""

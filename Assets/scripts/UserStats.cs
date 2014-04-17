@@ -506,8 +506,8 @@ public class UserStats : MonoBehaviour
 
 	public IEnumerator HrpgJson ()
 	{
-        //if (!PlayerPrefs.HasKey("jsonSave"))
-        //{
+        if (!PlayerPrefs.HasKey("jsonSave"))
+        {
             var request = new HTTP.Request("GET", url);
 	        //set headers
             request.headers.Set("x-api-key", key);
@@ -547,16 +547,16 @@ public class UserStats : MonoBehaviour
                 something = "yes";
 				//Debug.Log ("string 'something' equals" + something);
             }
-        /*}
+        }
         else
         {
             Debug.Log("Player prefs in else is " + PlayerPrefs.GetString("jsonSave"));
             userData = new HabitDatav1(PlayerPrefs.GetString("jsonSave"));
-            ht = userData.ht;
+            //ht = userData.ht;
             something = "yes";
             Debug.Log("ht in else is" + ht);
         }
-        */
+        
     		//to parse api/user
 		if (something == "yes") 
 		{

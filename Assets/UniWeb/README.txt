@@ -5,12 +5,9 @@ UniWeb
 UniWeb allows you to use a common HTTP api across Unity Web players, iOS
 and desktop builds.
 
-
-FAQ 1: CROSSDOMAIN.XML AND WEB PLAYER PROBLEMS?
-----------------------------------------
-NB: To use UniWeb in the Web Player, you must have a server running on
-the host which supplies a crossdomain.xml file. See: http://bit.ly/h6QY0M
-
+See the UniWebServers zip file for simple socket.io and websocket servers 
+which you can run using node.js. Note, you will need to move this zip file 
+before uncompressing, as the .js files it contains will not compile in Unity.
 
 
 How to do a HTTP GET request.
@@ -46,7 +43,6 @@ request.Text = "Hello from UniWeb!";
 request.Send();
 
 
-
 How to post forms.
 ------------------
 
@@ -56,6 +52,21 @@ w.AddBinaryData("file", new byte[] { 65,65,65,65 });
 var r = new HTTP.Request (url, w);
 yield return r.Send();
 
+
+How to setup the embedded Web Server.
+-------------------------------------
+
+Add a HttpServer component to a game object. Configure it with the port you wish to use.
+
+Press play, then use a browser to visit http://localhost:<your port>/. You should get a 
+404 Not found message.
+
+To add a URL into the browser, attach a component derived from HttpRequestHandler (see 
+HelloWorldHandler.cs for example) which at least overrides the GET method. Set the path
+variable on this component to "/" (the root path) or whatever path you prefer, then click 
+Play. This time when you visit the url (with the right path) in your browser, you should
+get the results of your GET method as text. You can also override PUT, POST and DELETE
+methods. Your Unity game is now serving HTTP!
 
 
 Support

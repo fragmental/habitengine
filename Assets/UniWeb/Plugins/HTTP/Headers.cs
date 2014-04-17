@@ -50,8 +50,9 @@ namespace HTTP
         /// </summary>
         public List<string> GetAll (string name)
         {
+            //name = name.ToLower();
             foreach (string key in headers.Keys) {
-                if (string.Compare (name, key, true) == 0) {
+                if (name.ToLower() == key.ToLower()) {
                     return headers [key];
                 }
             }
@@ -88,7 +89,7 @@ namespace HTTP
         {
             foreach (string name in headers.Keys) {
                 foreach (string value in headers[name]) {
-                    stream.Write (System.Text.ASCIIEncoding.ASCII.GetBytes (name + ": " + value));
+                    stream.Write (System.Text.UTF8Encoding.UTF8.GetBytes (name + ": " + value));
                     stream.Write (EOL);
                 }
             }

@@ -6,11 +6,14 @@ public class UniWebExamples : MonoBehaviour
 
     void Start ()
     {
+        StartCoroutine(TestHTTP10());
+        StartCoroutine(UseHTTPS());
         StartCoroutine (FetchAssetBundle());
         StartCoroutine (FetchImage ());
         StartCoroutine (PostForm ());
         StartCoroutine (TimeoutExample ());
         WebSocketExample ();
+
     }
 
 
@@ -21,6 +24,35 @@ public class UniWebExamples : MonoBehaviour
         }
 
     }
+
+
+    IEnumerator TestHTTP10() {
+        var r = new HTTP.Request("GET", "http://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=-36.8518&lon1=174.8554&resultFormat=xml");
+        yield return r.Send();
+        if(r.exception == null) {
+            Debug.Log(r.response.status);
+            Debug.Log(r.response.Text);
+        } else {
+            Debug.LogError(r.exception);
+        }
+    }
+
+
+
+    IEnumerator UseHTTPS ()
+    {
+        
+        var url = "https://www.google.com/";
+        var r = new HTTP.Request ("GET", url);
+        yield return r.Send ();
+        
+        if (r.exception == null) {
+            Debug.Log (r.response.status);
+        } else {
+            Debug.Log(r.exception);
+        }
+    }
+
 
     IEnumerator FetchAssetBundle() {
         var r = new HTTP.Request("GET", "http://differentmethods.com/~simon/uniwebtest.unity3d");

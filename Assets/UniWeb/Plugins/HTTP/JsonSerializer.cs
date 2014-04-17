@@ -30,7 +30,8 @@ namespace HTTP
 		
 		public static object Decode (byte[] json)
 		{
-			return Decode (System.Text.ASCIIEncoding.ASCII.GetString (json));
+            var enc = new UTF8Encoding();
+			return Decode (enc.GetString (json, 0, json.Length));
 		}
 
 		public static object Decode (string json)
@@ -67,7 +68,8 @@ namespace HTTP
 
 		public static T Decode<T> (byte[] json) where T : class, new()
 		{
-			return Decode<T> (System.Text.ASCIIEncoding.ASCII.GetString (json));
+            var enc = new UTF8Encoding();
+            return Decode<T> (enc.GetString (json, 0, json.Length));
 		}
 
 		public static T Decode<T> (string json) where T : class, new()

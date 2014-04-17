@@ -1,9 +1,14 @@
 using UnityEngine;
 using System;
+using System.Text;
 using System.Linq;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+
+#if UNITY_WP8
+using UnityEngine.Windows;
+#endif
 
 namespace HTTP
 {   
@@ -30,6 +35,8 @@ namespace HTTP
         public event System.Action OnDisconnect;
         public event OnTextMessageHandler OnTextMessageRecv;
         public event OnBinaryMessageHandler OnBinaryMessageRecv;
+
+        public Exception exception;
         
         [Flags]
         public enum OpCode
@@ -179,6 +186,8 @@ namespace HTTP
         bool closing = false;
         bool connectionBroken;
 
+        UTF8Encoding enc = new UTF8Encoding();
+
         void OnTextMessage (string msg)
         {
             lock (incomingText) {
@@ -249,7 +258,8 @@ namespace HTTP
         IEnumerator _Connect (Uri uri)
         {
             isDone = false;
-            connected = false;  
+            connected = false; 
+            exception = null;
             //var host = uri.Host + (uri.Port == 80 ? "" : ":" + uri.Port.ToString ());
             var req = new Request ("GET", uri.ToString ());
             req.headers.Set ("Upgrade", "websocket");
@@ -261,31 +271,40 @@ namespace HTTP
             req.headers.Set ("Origin", "null");
             req.acceptGzip = false;
             yield return req.Send ();
-            
-            if (req.response.headers.Get ("Upgrade").ToLower () == "websocket" && req.response.headers.Get ("Connection").ToLower () == "upgrade") {
-                var receivedKey = req.response.headers.Get ("Sec-Websocket-Accept").ToLower ();
-                var sha = new System.Security.Cryptography.SHA1CryptoServiceProvider ();
-                sha.ComputeHash (System.Text.ASCIIEncoding.ASCII.GetBytes (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
-                var computedKey = System.Convert.ToBase64String (sha.Hash).ToLower ();
-                if (computedKey == receivedKey) {
-                    //good to go    
-                    connected = true;
-                    connection = req.upgradedConnection;
-                    outgoingWorkerThread = new Thread (OutgoingWorker);
-                    outgoingWorkerThread.Start ();
-                    incomingWorkerThread = new Thread (IncomingWorker);
-                    incomingWorkerThread.Start ();
-                    UniWeb.Instance.StartCoroutine (Dispatcher ());          
-                    UniWeb.Instance.OnQuit (() => {
-                        Close (CloseEventCode.CloseEventCodeGoingAway, "Quit");
-                        req.upgradedConnection.client.Close ();
-                    });
-                    if (OnConnect != null)
-                        OnConnect ();
-                } else {
-                    //invalid
-                    connected = false;
-                }   
+            if (req.exception != null) {
+                exception = req.exception;
+            } else {
+                if (req.response.headers.Get ("Upgrade").ToLower () == "websocket" && req.response.headers.Get ("Connection").ToLower () == "upgrade") {
+                    var receivedKey = req.response.headers.Get ("Sec-Websocket-Accept").ToLower ();
+#if UNITY_WP8
+                    var computedKey = System.Convert.ToBase64String (
+                        Crypto.ComputeSHA1Hash(enc.GetBytes (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+                    ).ToLower();
+#else
+                    var sha = new System.Security.Cryptography.SHA1CryptoServiceProvider ();
+                    sha.ComputeHash (enc.GetBytes (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
+                    var computedKey = System.Convert.ToBase64String (sha.Hash).ToLower ();
+#endif
+                    if (computedKey == receivedKey) {
+                        //good to go    
+                        connected = true;
+                        connection = req.upgradedConnection;
+                        outgoingWorkerThread = new Thread (OutgoingWorker);
+                        outgoingWorkerThread.Start ();
+                        incomingWorkerThread = new Thread (IncomingWorker);
+                        incomingWorkerThread.Start ();
+                        UniWeb.Instance.StartCoroutine (Dispatcher ());          
+                        UniWeb.Instance.OnQuit (() => {
+                            Close (CloseEventCode.CloseEventCodeGoingAway, "Quit");
+                            req.upgradedConnection.Dispose ();
+                        });
+                        if (OnConnect != null)
+                            OnConnect ();
+                    } else {
+                        //invalid
+                        connected = false;
+                    }   
+                }
             }
             isDone = true;
 
@@ -293,7 +312,7 @@ namespace HTTP
         
         public void Send (string data)
         {   
-            outgoing.Add (new OutgoingMessage (OpCode.OpCodeText, System.Text.ASCIIEncoding.ASCII.GetBytes (data)));
+            outgoing.Add (new OutgoingMessage (OpCode.OpCodeText, enc.GetBytes (data)));
         }
         
         public void Send (byte[] data)
@@ -365,7 +384,8 @@ namespace HTTP
                     if (continuousFrameOpCode == OpCode.OpCodeText) {
                         var message = "";
                         if (continuousFrameData.Count > 0) {
-                            message = System.Text.UTF8Encoding.UTF8.GetString (continuousFrameData.ToArray ());
+                            var array = continuousFrameData.ToArray ();
+                            message = enc.GetString (array, 0, array.Length);
                         }
                         OnTextMessage (message);
                     } else if (continuousFrameOpCode == OpCode.OpCodeBinary) {
@@ -379,7 +399,7 @@ namespace HTTP
                     if (frame.payloadLength > 0) {
                         var payload = new byte[frame.payloadLength];
                         buffer.CopyTo (frame.payload, payload, 0, frame.payloadLength);
-                        message = System.Text.UTF8Encoding.UTF8.GetString (payload);
+                        message = enc.GetString (payload,0,payload.Length);
                     } 
                     OnTextMessage (message);
                     RemoveProcessed (buffer, frame.end);
@@ -414,7 +434,7 @@ namespace HTTP
                 if (frame.payloadLength >= 3) { 
                     byte[] payload = new byte[frame.payloadLength - 2];
                     buffer.CopyTo (2, payload, 0, frame.payloadLength - 2); 
-                    closeEventReason = System.Text.UTF8Encoding.UTF8.GetString (payload);
+                    closeEventReason = enc.GetString (payload, 0, payload.Length);
                 } else {
                     closeEventReason = "";
                 }
@@ -578,7 +598,7 @@ namespace HTTP
                 byte lb = (byte)code;
                 buf.Add (hb);
                 buf.Add (lb);
-                buf.AddRange (System.Text.UTF8Encoding.UTF8.GetBytes (reason));
+                buf.AddRange (enc.GetBytes (reason));
                 outgoing.Add (new OutgoingMessage (OpCode.OpCodeClose, buf.ToArray ()));
             } 
             
