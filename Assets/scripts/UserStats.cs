@@ -65,10 +65,12 @@ public class UserStats : MonoBehaviour
 	public List<float> habitValue = new List<float> ();
 	public List<Color> habitColor = new List<Color> ();
 
+
     public List<string> dailyList = new List<string>();
     public List<bool> dailyListClicked = new List<bool>();
     public List<string> dailyIDList = new List<string>();
     public List<bool> dailyToggleList = new List<bool>();
+	//private List<bool> dailyChecklist = new List<bool>();
     
     public List<string> todoList = new List<string>();
     public List<string> todoIDList = new List<string>();
@@ -251,7 +253,7 @@ public class UserStats : MonoBehaviour
         
     }
 
-    public IEnumerator DailyUpdate()
+    /*public IEnumerator DailyUpdate()
     {
         string dUrl = " ";
 
@@ -267,6 +269,7 @@ public class UserStats : MonoBehaviour
             Debug.Log("Should be unchecked");
             //request.Text = "{\"completed\" : false}";
         }
+
 
 
 
@@ -313,10 +316,11 @@ public class UserStats : MonoBehaviour
 
         }
     }
-
-    /*public IEnumerator DailyUpdate()
+*/
+    public IEnumerator DailyUpdate()
     {
-        var dUrl = url + "/task/" + dailyIDList[i];
+        var dUrl = url + "/tasks/" + dailyIDList[i];
+		Debug.Log ("dUrl is = " + dUrl);
 
         var request = new HTTP.Request("PUT", dUrl);
 
@@ -343,7 +347,7 @@ public class UserStats : MonoBehaviour
         }
         else
         {
-            StartCoroutine(HrpgJson());
+            //StartCoroutine(HrpgJson());
             var response = request.response;
             //inspect response code
             Debug.Log(response.status);
@@ -356,15 +360,15 @@ public class UserStats : MonoBehaviour
             var dailyResponse = response.Text;
             Type t = dailyResponse.GetType();
             Debug.Log("dailyResponse type is " + t.FullName);
-            /*if (dailyResponse is Hashtable)
-            {
+            //if (dailyResponse is Hashtable)
+            //{
 
-            }
+            //}
             
         }
 
     }
-    */
+
     public IEnumerator TodoUpdate()
     {
         string tUrl = " ";
@@ -506,8 +510,8 @@ public class UserStats : MonoBehaviour
 
 	public IEnumerator HrpgJson ()
 	{
-        if (!PlayerPrefs.HasKey("jsonSave"))
-        {
+        //if (!PlayerPrefs.HasKey("jsonSave"))
+        //{
             var request = new HTTP.Request("GET", url);
 	        //set headers
             request.headers.Set("x-api-key", key);
@@ -517,32 +521,32 @@ public class UserStats : MonoBehaviour
 
 
 
-            if (request.exception != null)
-            {
-                Debug.LogError(request.exception);
-            }
-            else
-            {
-                var response = request.response;
-                //inspect response code
-                Debug.Log(response.status);
-                //inspect headers
-                Debug.Log(response.headers.Get("Content-Type"));
-                //Get the body as a byte array
-                //Debug.Log(response.bytes);
-                //Or as a string
-                Debug.Log(response.Text);
-                /*if (!Directory.Exists(Environment.SpecialFolder.ApplicationData + @"\.h3d\"))
+            if (request.exception != null) {
+						Debug.LogError (request.exception);
+				} else {
+						var response = request.response;
+						//inspect response code
+						Debug.Log (response.status);
+						//inspect headers
+						Debug.Log (response.headers.Get ("Content-Type"));
+						//Get the body as a byte array
+						//Debug.Log(response.bytes);
+						//Or as a string
+						Debug.Log (response.Text);
+						/*if (!Directory.Exists(Environment.SpecialFolder.ApplicationData + @"\.h3d\"))
                 {
                     Directory.CreateDirectory(Environment.SpecialFolder.ApplicationData + @"\.h3d\");
                 }
                 //System.IO.File.WriteAllText(Environment.SpecialFolder.ApplicationData + @"\.h3d\" + "Jsonsave.txt", response.Text.ToString());			
 		        */
 
-                userData = new HabitDatav1(response.Text);
-                //ht = userData.ht;
-                //object setupData = new HabitDatav1.setupData(task);
-                PlayerPrefs.SetString("jsonSave", response.Text);
+						userData = new HabitDatav1 (response.Text);
+						//ht = userData.ht;
+						//object setupData = new HabitDatav1.setupData(task);
+
+						
+						   PlayerPrefs.SetString("jsonSave", response.Text);
+/*//to comment out jsonsave start here
                 //Debug.Log("Player prefs after if is " + PlayerPrefs.GetString("jsonSave"));
                 something = "yes";
 				//Debug.Log ("string 'something' equals" + something);
@@ -555,12 +559,16 @@ public class UserStats : MonoBehaviour
             //ht = userData.ht;
             something = "yes";
             Debug.Log("ht in else is" + ht);
+
+
         }
         
     		//to parse api/user
 		if (something == "yes") 
 		{
-             
+*///to comment out jsonsave end here
+				
+
 			//Hashtable ht2 = ht as Hashtable;
             //Debug.Log("ht is not null and ht2 is" + ht2);
 			//stats = ht2["stats"] as Hashtable;
@@ -572,6 +580,7 @@ public class UserStats : MonoBehaviour
 			JSONArray dailies2 = userData.Dailies.AsArray;
 			JSONArray todos2 = userData.Todos.AsArray;
 			JSONArray rewards2 = userData.Rewards.AsArray;
+			JSONArray dailyChecklist;
 
 			//Type t2 = userData.Habits.GetType();
 			//Debug.Log("userData.Habits type is " + t.FullName);
@@ -695,6 +704,14 @@ public class UserStats : MonoBehaviour
                 dailyToggleList.Add(daily["completed"].AsBool);
 				dailyListClicked.Add(daily["completed"].AsBool);
                 dailyIDList.Add(daily["id"]);
+				foreach (JSONNode checkItem in daily["checklist"].AsArray)
+				{
+					dailyList.Add("    " + checkItem["text"]);
+					dailyToggleList.Add(checkItem["completed"].AsBool);
+					dailyListClicked.Add(checkItem["completed"].AsBool);
+					dailyIDList.Add(checkItem["id"]);
+				}
+
             }
 
 			//TODOS
