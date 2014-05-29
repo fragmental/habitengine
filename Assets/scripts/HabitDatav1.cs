@@ -76,9 +76,12 @@ public class HabitDatav1
         {
             root = data;
 
-            JSONNode tasks = data.ToString("tasks");
-
+			//copying code from java?
+           // JSONNode tasks = data.ToString("tasks");
+			string taskString = data.ToString();
+			Debug.Log("taskString is "+ taskString);
             return true;
+
         }
         catch (Exception e)
         {
@@ -88,5 +91,7 @@ public class HabitDatav1
         return false;
      
     }
+    
+    
 }
 

@@ -71,6 +71,10 @@ public class UserStats : MonoBehaviour
     public List<string> dailyIDList = new List<string>();
     public List<bool> dailyToggleList = new List<bool>();
 	//private List<bool> dailyChecklist = new List<bool>();
+	public List<bool> isChecklist = new List<bool>();
+	private List<int> dailyChecklistIndex = new List<int> ();
+	private List<int> dailyIndex = new List<int> ();
+		
     
     public List<string> todoList = new List<string>();
     public List<string> todoIDList = new List<string>();
@@ -239,10 +243,12 @@ public class UserStats : MonoBehaviour
                 health = hU["hp"].AsFloat;
                 gp = hU["gp"].AsFloat;
                 xp = hU["exp"].AsFloat;
+
             }
             else
             {
                 StartCoroutine(HrpgJson());
+				animation.PlayQueued("jump", QueueMode.CompleteOthers);
             }
                 
                 
@@ -253,7 +259,9 @@ public class UserStats : MonoBehaviour
         
     }
 
-    /*public IEnumerator DailyUpdate()
+//Daily up/down start
+/*
+    public IEnumerator DailyUpdate()
     {
         string dUrl = " ";
 
@@ -317,57 +325,83 @@ public class UserStats : MonoBehaviour
         }
     }
 */
+//Daily Up/Down End
+
+
+//Daily completed start
     public IEnumerator DailyUpdate()
     {
-        var dUrl = url + "/tasks/" + dailyIDList[i];
-		Debug.Log ("dUrl is = " + dUrl);
+		Debug.Log("Daily update is called");
+		if (isChecklist[i] == true) 
+		{
+			string checklist =""; //wtf does this do?
+			Debug.Log ("Checklist item if has been called");
+			//checklistObject["dailys"]["checklist"][
+			//request.Text = "{\"completed\" : false}";
+			//foreach checklistItem in checklist
+			//it++'
+			//checklist = checklist + "{\"text\":\" + check[it] + "\",\"id\":\" + checkListID + "\",\"completed\": dailyT}"
+			//Don't know how to associate checklist item with checklist parent.  Whole problem just ties brain in knots and causes headache.
+		}
+		else if (isChecklist[i] == false) 
+		{
+			Debug.Log("Non-Checklist item else if has been called.");
+			var dUrl = url + "/tasks/" + dailyIDList[i];
+			Debug.Log ("dUrl is = " + dUrl);
+			
+			var request = new HTTP.Request("PUT", dUrl);
+			
+			request.headers.Set("x-api-key", key);
+			request.headers.Set("x-api-user", uid);
+			request.headers.Set("Content-Type", "application/json");
 
-        var request = new HTTP.Request("PUT", dUrl);
+		
+			if (dailyToggleList[i] == true)
+	        {
+				request.Text = "{\"completed\" : true}";
+				//request.Text = "{\"direction\": \"up\"}";
+	            Debug.Log("Should be checked");
+				animation.PlayQueued("smile", QueueMode.CompleteOthers);
+	        }
+	        else if (dailyToggleList[i] == false)
+	        {
+				request.Text = 	"{\"direction\": \"down\"}";
+	            animation.PlayQueued("frown", QueueMode.CompleteOthers);
+				Debug.Log("Should be unchecked");
+			}
+				//}
+	        request.Send();
+	        while (!request.isDone) yield return new WaitForEndOfFrame();
 
-        request.headers.Set("x-api-key", key);
-        request.headers.Set("x-api-user", uid);
-        request.headers.Set("Content-Type", "application/json");
+	        if (request.exception != null)
+	        {
+	            Debug.LogError(request.exception);
+	        }
+	        else
+	        {
+	            //StartCoroutine(HrpgJson());
+	            var response = request.response;
+	            //inspect response code
+	            Debug.Log(response.status);
+	            //inspect headers
+	            Debug.Log(response.headers.Get("Content-Type"));
+	            //Get the body as a byte array
+	            //Debug.Log(response.bytes);
+	            //Or as a string
+	            Debug.Log(response.Text);
+	            var dailyResponse = response.Text;
+	            Type t = dailyResponse.GetType();
+	            Debug.Log("dailyResponse type is " + t.FullName);
+	            //if (dailyResponse is Hashtable)
+	            //{
 
-        if (dailyToggleList[i] == true)
-        {
-            request.Text = "{\"completed\": true}";
-            Debug.Log("Should be checked");
-        }
-        else if (dailyToggleList[i] == false)
-        {
-            Debug.Log("Should be unchecked");
-            request.Text = "{\"completed\" : false}";
-        }
-        request.Send();
-        while (!request.isDone) yield return new WaitForEndOfFrame();
+	            //}
+	            
+			}
+		}
+	}
 
-        if (request.exception != null)
-        {
-            Debug.LogError(request.exception);
-        }
-        else
-        {
-            //StartCoroutine(HrpgJson());
-            var response = request.response;
-            //inspect response code
-            Debug.Log(response.status);
-            //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
-            //Get the body as a byte array
-            //Debug.Log(response.bytes);
-            //Or as a string
-            Debug.Log(response.Text);
-            var dailyResponse = response.Text;
-            Type t = dailyResponse.GetType();
-            Debug.Log("dailyResponse type is " + t.FullName);
-            //if (dailyResponse is Hashtable)
-            //{
-
-            //}
-            
-        }
-
-    }
+//Daily Completed end
 
     public IEnumerator TodoUpdate()
     {
@@ -418,6 +452,7 @@ public class UserStats : MonoBehaviour
 
         }
     }
+
 
     
  
@@ -696,22 +731,38 @@ public class UserStats : MonoBehaviour
             //DAILIES
             dailyList.Clear();
             dailyToggleList.Clear();
-            dailyListClicked.Clear();
+			dailyListClicked.Clear();
             dailyIDList.Clear();
+			int i2 = 0;
+			int i3 = 0;
             foreach (JSONNode daily in dailies2)
             {
                 dailyList.Add(daily["text"]);
                 dailyToggleList.Add(daily["completed"].AsBool);
 				dailyListClicked.Add(daily["completed"].AsBool);
                 dailyIDList.Add(daily["id"]);
+				dailyChecklistIndex.Add(i3);
+				i3 = 0;
+				
+					
+				isChecklist.Add(false);
+				
+				
+
+				Debug.Log ("This item is not a checklist number"+ i2);
+				
 				foreach (JSONNode checkItem in daily["checklist"].AsArray)
 				{
 					dailyList.Add("    " + checkItem["text"]);
 					dailyToggleList.Add(checkItem["completed"].AsBool);
 					dailyListClicked.Add(checkItem["completed"].AsBool);
 					dailyIDList.Add(checkItem["id"]);
+					dailyChecklistIndex.Add(i3++);
+					isChecklist.Add(true);
+					//dailyChecklist
+					Debug.Log ("This item is checklist item number"+ i3 +"from daily" + dailyList[i2]);
 				}
-
+				dailyIndex.Add(i2++);
             }
 
 			//TODOS
@@ -882,6 +933,7 @@ public class UserStats : MonoBehaviour
                         habitClick[i] = true;
                         StartCoroutine(HabitUpdate()); 
                         Debug.Log("you pressed button + on " + habitList[i]);
+						animation.PlayQueued("smile", QueueMode.CompleteOthers);
                     }
                 }
 
@@ -892,6 +944,8 @@ public class UserStats : MonoBehaviour
                         habitClick[i] = false;
                         StartCoroutine(HabitUpdate()); 
                         Debug.Log("you pressed button - on " + habitList[i]);
+						animation.PlayQueued("frown", QueueMode.CompleteOthers);
+						
                     }
                 }
                 
@@ -958,6 +1012,7 @@ public class UserStats : MonoBehaviour
 
             for (i = 0; i < todoList.Count; i++)
             {
+				
                 if (todoCompleted[i] == false)
                 {
                     GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), todoList[i]);
@@ -966,6 +1021,7 @@ public class UserStats : MonoBehaviour
 
 				if (todoToggleList[i] = GUI.Toggle(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttDistance), todoToggleList[i], todoList[i]))
                     {
+						animation.PlayQueued("smile", QueueMode.CompleteOthers);
                         StartCoroutine(TodoUpdate());
                         todoCompleted[i] = true;
                         todoToggleList[i] = true;
@@ -1008,6 +1064,7 @@ public class UserStats : MonoBehaviour
 
                     Debug.Log("you pressed button " + rewardList[i]);
                     StartCoroutine(RewardUpdate());
+					animation.PlayQueued("smile", QueueMode.CompleteOthers);
                 }
 
             }

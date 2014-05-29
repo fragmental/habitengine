@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using HTTP;
+//using HTTP;
 
 
 public class Login : MonoBehaviour
 {
-    //public static string url = "https://beta.habitrpg.com/api/v2/user";
+    //public static string url = "http://beta.habitrpg.com/api/v2/user";
 	//public static string url = "https://www.habitrpg.com/api/v2/user";
     public static string url = "http://fragmental.no-ip.org:3000/api/v2/user";
     private string aUrl = url + "/auth/local";

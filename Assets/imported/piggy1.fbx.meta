@@ -1,0 +1,266 @@
+fileFormatVersion: 2
+guid: d169f2cde47ea444887a95c8bdc99a35
+ModelImporter:
+  serializedVersion: 16
+  fileIDToRecycleName:
+    100000: pasted__pCube2
+    100002: pasted__pCube3
+    100004: pasted__pCube4
+    100006: pasted__pCube5
+    100008: pasted__pSphere1
+    100010: pCube1
+    100012: pCube2
+    100014: pCube4
+    100016: Pig_GRP
+    100018: //RootNode
+    100020: pPlane1
+    100022: pSphere1
+    400000: pasted__pCube2
+    400002: pasted__pCube3
+    400004: pasted__pCube4
+    400006: pasted__pCube5
+    400008: pasted__pSphere1
+    400010: pCube1
+    400012: pCube2
+    400014: pCube4
+    400016: Pig_GRP
+    400018: //RootNode
+    400020: pPlane1
+    400022: pSphere1
+    2300000: pasted__pCube2
+    2300002: pasted__pCube3
+    2300004: pasted__pCube4
+    2300006: pasted__pCube5
+    2300008: pasted__pSphere1
+    2300010: pCube2
+    2300012: pCube4
+    2300014: pPlane1
+    2300016: pSphere1
+    3300000: pasted__pCube2
+    3300002: pasted__pCube3
+    3300004: pasted__pCube4
+    3300006: pasted__pCube5
+    3300008: pasted__pSphere1
+    3300010: pCube2
+    3300012: pCube4
+    3300014: pPlane1
+    3300016: pSphere1
+    4300000: pasted__pCube3
+    4300002: pCube2
+    4300004: pasted__pCube2
+    4300006: pasted__pSphere1
+    4300008: pasted__pCube4
+    4300010: pasted__pCube5
+    4300012: pCube1
+    4300014: pSphere1
+    4300016: pCube4
+    4300018: pPlane1
+    7400000: smile
+    7400002: frown
+    7400004: jump
+    9500000: //RootNode
+    11100000: //RootNode
+    13700000: pCube1
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: smile
+      takeName: Take 001
+      firstFrame: 1
+      lastFrame: 24
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Pig_GRP
+        weight: 1
+      - path: Pig_GRP/pasted__pCube2
+        weight: 1
+      - path: Pig_GRP/pasted__pCube3
+        weight: 1
+      - path: Pig_GRP/pasted__pCube4
+        weight: 1
+      - path: Pig_GRP/pasted__pCube5
+        weight: 1
+      - path: Pig_GRP/pasted__pSphere1
+        weight: 1
+      - path: Pig_GRP/pCube1
+        weight: 1
+      - path: Pig_GRP/pCube2
+        weight: 1
+      - path: Pig_GRP/pCube4
+        weight: 1
+      - path: Pig_GRP/pSphere1
+        weight: 1
+      - path: pPlane1
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: frown
+      takeName: Take 001
+      firstFrame: 24
+      lastFrame: 48
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Pig_GRP
+        weight: 1
+      - path: Pig_GRP/pasted__pCube2
+        weight: 1
+      - path: Pig_GRP/pasted__pCube3
+        weight: 1
+      - path: Pig_GRP/pasted__pCube4
+        weight: 1
+      - path: Pig_GRP/pasted__pCube5
+        weight: 1
+      - path: Pig_GRP/pasted__pSphere1
+        weight: 1
+      - path: Pig_GRP/pCube1
+        weight: 1
+      - path: Pig_GRP/pCube2
+        weight: 1
+      - path: Pig_GRP/pCube4
+        weight: 1
+      - path: Pig_GRP/pSphere1
+        weight: 1
+      - path: pPlane1
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: jump
+      takeName: Take 001
+      firstFrame: 48
+      lastFrame: 84
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Pig_GRP
+        weight: 1
+      - path: Pig_GRP/pasted__pCube2
+        weight: 1
+      - path: Pig_GRP/pasted__pCube3
+        weight: 1
+      - path: Pig_GRP/pasted__pCube4
+        weight: 1
+      - path: Pig_GRP/pasted__pCube5
+        weight: 1
+      - path: Pig_GRP/pasted__pSphere1
+        weight: 1
+      - path: Pig_GRP/pCube1
+        weight: 1
+      - path: Pig_GRP/pCube2
+        weight: 1
+      - path: Pig_GRP/pCube4
+        weight: 1
+      - path: Pig_GRP/pSphere1
+        weight: 1
+      - path: pPlane1
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 0
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 1
+  additionalBone: 0
+  userData: 
