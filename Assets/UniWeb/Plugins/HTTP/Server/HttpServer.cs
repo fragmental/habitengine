@@ -92,14 +92,14 @@ namespace HTTP.Server
                     request = Request.BuildFromStream (host, stream);
                 } catch (HTTPException) {
                     Shutdown ();
-                    return false;
+//                    return false;
                 } catch(ThreadAbortException) {
                     Shutdown ();
-                    return false;
+//                    return false;
                 } catch (Exception e) {
                     Debug.LogError ("Exception in server thread: " + e.ToString ());
                     Shutdown ();
-                    return false;
+//                    return false;
                 }
 
                 yield return foreground;
@@ -112,14 +112,14 @@ namespace HTTP.Server
                     stream.Dispose();
                 } catch (HTTPException) {
                     Shutdown ();
-                    return false;
+//                    return false;
                 } catch(ThreadAbortException) {
                     Shutdown ();
-                    return false;
+//                    return false;
                 } catch (Exception e) {
                     Debug.LogError ("Exception in server thread: " + e.ToString ());
                     Shutdown ();
-                    return false;
+//                    return false;
                 }
                 if(logRequests) {
                     Debug.Log(string.Format("{0} {1} {2} \"{3}\" {4}", System.DateTime.Now.ToString("yyyy/mm/dd H:mm:ss zzz"), request.response.status, request.method.ToUpper(), request.uri, request.response.Bytes.Length));

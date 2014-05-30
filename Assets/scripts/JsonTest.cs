@@ -18,7 +18,7 @@ public class JsonTest : MonoBehaviour {
 	
 	// Update is called once per frame
 	//IEnumerator Json () {
-		//var checklistTest = dailies ["tasks"] ["dailys"] ["checklist"] [0] ["completed"].AsBool;
+		//var checklistTest = dailies ["tasks"] ["dailys"] [0] ["checklist"] [0] ["completed"].AsBool;
 		//Debug.Log ("completed = " + ChecklistTest);
 		//how do you pick which ones?
 	

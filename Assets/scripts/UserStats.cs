@@ -65,15 +65,38 @@ public class UserStats : MonoBehaviour
 	public List<float> habitValue = new List<float> ();
 	public List<Color> habitColor = new List<Color> ();
 
+	public class dailyListDetail {
+		public string dailyName;
+		public string dailyID;
+		public bool dailyListClicked;
+		public bool dailyToggle;
+		public int dailyJSONIndex;
+		public bool dailyIsChecklist;
+		public int dailyJSONChecklistIndex;
+		public int dailyChecklistParent;
+		// Constructor to create object.
+		public dailyListDetail(string Name, string ID, bool ListClicked, bool Toggle, int JSONIndex, bool IsChecklist, int JSONChecklistIndex, int ChecklistParent) {
+			dailyName = Name;
+			dailyID = ID;
+			dailyListClicked = ListClicked;
+			dailyToggle = Toggle;
+			dailyJSONIndex = JSONIndex;
+			dailyIsChecklist = IsChecklist;
+			dailyJSONChecklistIndex = JSONChecklistIndex;
+			dailyChecklistParent = ChecklistParent;
+		}
+	};
 
-    public List<string> dailyList = new List<string>();
-    public List<bool> dailyListClicked = new List<bool>();
-    public List<string> dailyIDList = new List<string>();
-    public List<bool> dailyToggleList = new List<bool>();
+	public List<dailyListDetail> dailyListArray = new List<dailyListDetail>();
+
+    //public List<string> dailyList = new List<string>();
+    //public List<bool> dailyListClicked = new List<bool>();
+    //public List<string> dailyIDList = new List<string>();
+    //public List<bool> dailyToggleList = new List<bool>();
 	//private List<bool> dailyChecklist = new List<bool>();
-	public List<bool> isChecklist = new List<bool>();
-	private List<int> dailyChecklistIndex = new List<int> ();
-	private List<int> dailyIndex = new List<int> ();
+	//public List<bool> isChecklist = new List<bool>();
+	//private List<int> dailyChecklistIndex = new List<int> ();
+	//private List<int> dailyIndex = new List<int> ();
 		
     
     public List<string> todoList = new List<string>();
@@ -332,21 +355,78 @@ public class UserStats : MonoBehaviour
     public IEnumerator DailyUpdate()
     {
 		Debug.Log("Daily update is called");
-		if (isChecklist[i] == true) 
+		if (dailyListArray[i].dailyIsChecklist == true) 
 		{
-			string checklist =""; //wtf does this do?
 			Debug.Log ("Checklist item if has been called");
+			var dUrl = url + "/tasks/" + dailyListArray[dailyListArray[i].dailyChecklistParent].dailyID;
+			Debug.Log ("dUrl is = " + dUrl);
+			//string checklist =""; //wtf does this do?
+
+			var request = new HTTP.Request("PUT", dUrl);
+			
+			request.headers.Set("x-api-key", key);
+			request.headers.Set("x-api-user", uid);
+			request.headers.Set("Content-Type", "application/json");
+
+			string strTempJSON = "{\"checklist\": " + userData.getUpdatedCheckListByIndexes(
+				dailyListArray[i].dailyJSONIndex,
+				dailyListArray[i].dailyJSONChecklistIndex,
+				dailyListArray[i].dailyToggle).ToString () + "}";
+
+			Debug.Log ("Updated result: " + strTempJSON);
 			//checklistObject["dailys"]["checklist"][
-			//request.Text = "{\"completed\" : false}";
+			request.Text = strTempJSON;
 			//foreach checklistItem in checklist
 			//it++'
 			//checklist = checklist + "{\"text\":\" + check[it] + "\",\"id\":\" + checkListID + "\",\"completed\": dailyT}"
 			//Don't know how to associate checklist item with checklist parent.  Whole problem just ties brain in knots and causes headache.
+			if (dailyListArray[i].dailyToggle == true)
+			{
+//				request.Text = "{\"completed\" : true}";
+				//request.Text = "{\"direction\": \"up\"}";
+				Debug.Log("Should be checked");
+				animation.PlayQueued("smile", QueueMode.CompleteOthers);
+			}
+			else if (dailyListArray[i].dailyToggle == false)
+			{
+//				request.Text = 	"{\"direction\": \"down\"}";
+				animation.PlayQueued("frown", QueueMode.CompleteOthers);
+				Debug.Log("Should be unchecked");
+			}
+			//}
+			request.Send();
+			while (!request.isDone) yield return new WaitForEndOfFrame();
+			
+			if (request.exception != null)
+			{
+				Debug.LogError(request.exception);
+			}
+			else
+			{
+				//StartCoroutine(HrpgJson());
+				var response = request.response;
+				//inspect response code
+				Debug.Log(response.status);
+				//inspect headers
+				Debug.Log(response.headers.Get("Content-Type"));
+				//Get the body as a byte array
+				//Debug.Log(response.bytes);
+				//Or as a string
+				Debug.Log(response.Text);
+				var dailyResponse = response.Text;
+				Type t = dailyResponse.GetType();
+				Debug.Log("dailyResponse type is " + t.FullName);
+				//if (dailyResponse is Hashtable)
+				//{
+				
+				//}
+				
+			}
 		}
-		else if (isChecklist[i] == false) 
+		else if (dailyListArray[i].dailyIsChecklist == false) 
 		{
 			Debug.Log("Non-Checklist item else if has been called.");
-			var dUrl = url + "/tasks/" + dailyIDList[i];
+			var dUrl = url + "/tasks/" + dailyListArray[i].dailyID;
 			Debug.Log ("dUrl is = " + dUrl);
 			
 			var request = new HTTP.Request("PUT", dUrl);
@@ -356,14 +436,14 @@ public class UserStats : MonoBehaviour
 			request.headers.Set("Content-Type", "application/json");
 
 		
-			if (dailyToggleList[i] == true)
+			if (dailyListArray[i].dailyToggle == true)
 	        {
 				request.Text = "{\"completed\" : true}";
 				//request.Text = "{\"direction\": \"up\"}";
 	            Debug.Log("Should be checked");
 				animation.PlayQueued("smile", QueueMode.CompleteOthers);
 	        }
-	        else if (dailyToggleList[i] == false)
+			else if (dailyListArray[i].dailyToggle == false)
 	        {
 				request.Text = 	"{\"direction\": \"down\"}";
 	            animation.PlayQueued("frown", QueueMode.CompleteOthers);
@@ -615,7 +695,7 @@ public class UserStats : MonoBehaviour
 			JSONArray dailies2 = userData.Dailies.AsArray;
 			JSONArray todos2 = userData.Todos.AsArray;
 			JSONArray rewards2 = userData.Rewards.AsArray;
-			JSONArray dailyChecklist;
+			//JSONArray dailyChecklist;
 
 			//Type t2 = userData.Habits.GetType();
 			//Debug.Log("userData.Habits type is " + t.FullName);
@@ -729,40 +809,74 @@ public class UserStats : MonoBehaviour
             }
                 
             //DAILIES
-            dailyList.Clear();
-            dailyToggleList.Clear();
-			dailyListClicked.Clear();
-            dailyIDList.Clear();
-			int i2 = 0;
-			int i3 = 0;
+            //dailyList.Clear();
+//            dailyToggleList.Clear();
+//	 		  dailyListClicked.Clear();
+//            dailyIDList.Clear();
+		    dailyListArray.Clear ();
+
+		    int dailyListIndex;
+		    dailyListIndex = 0;
+
+		    int dailyListCurrentParent;
+			int dailyJSONIndex;
+		    dailyJSONIndex = 0;
+		    //dailyListDetail tmpDetail; // THIS WILL NOT BE USED.
             foreach (JSONNode daily in dailies2)
             {
-                dailyList.Add(daily["text"]);
-                dailyToggleList.Add(daily["completed"].AsBool);
-				dailyListClicked.Add(daily["completed"].AsBool);
-                dailyIDList.Add(daily["id"]);
-				dailyChecklistIndex.Add(i3);
-				i3 = 0;
-				
-					
-				isChecklist.Add(false);
-				
-				
+//              dailyList.Add(daily["text"]);
+//              dailyToggleList.Add(daily["completed"].AsBool);
+//				dailyListClicked.Add(daily["completed"].AsBool);
+//              dailyIDList.Add(daily["id"]);
+//				dailyChecklistIndex.Add(i3);
+//			    isChecklist.Add(false);
 
-				Debug.Log ("This item is not a checklist number"+ i2);
-				
+			    dailyListArray.Add(new dailyListDetail(
+				  daily["text"],
+				  daily["id"],
+				  daily["completed"].AsBool,
+				  daily["completed"].AsBool,
+				  dailyJSONIndex,
+				  false,
+				  0,
+				  0
+				));
+			    //dailyListArray.Add (tmpDetail);
+
+			    dailyListCurrentParent = dailyListIndex;
+			    
+				Debug.Log ("This item is not a checklist number"+ dailyJSONIndex);
+
+			    int checklistIndex;
+	            checklistIndex = 0;
+
 				foreach (JSONNode checkItem in daily["checklist"].AsArray)
 				{
-					dailyList.Add("    " + checkItem["text"]);
-					dailyToggleList.Add(checkItem["completed"].AsBool);
-					dailyListClicked.Add(checkItem["completed"].AsBool);
-					dailyIDList.Add(checkItem["id"]);
-					dailyChecklistIndex.Add(i3++);
-					isChecklist.Add(true);
+//					dailyList.Add("    " + checkItem["text"]);
+//					dailyToggleList.Add(checkItem["completed"].AsBool);
+//					dailyListClicked.Add(checkItem["completed"].AsBool);
+//					dailyIDList.Add(checkItem["id"]);
+//					dailyChecklistIndex.Add(checklistIndex++);
+//					isChecklist.Add(true);
 					//dailyChecklist
-					Debug.Log ("This item is checklist item number"+ i3 +"from daily" + dailyList[i2]);
+				    dailyListArray.Add (new dailyListDetail(
+					  "(" + dailyJSONIndex + " . " + checklistIndex + ") " + checkItem["text"],
+					  checkItem["id"],
+					  checkItem["completed"].AsBool,
+					  checkItem["completed"].AsBool,
+					  dailyJSONIndex,
+					  true,
+					  checklistIndex,
+					  dailyListCurrentParent
+					));
+				    //dailyListArray.Add (tmpDetail);
+				    Debug.Log ("This item is checklist item number "+ checklistIndex +" from daily " + dailyListArray[dailyListCurrentParent].dailyName);
+				    checklistIndex++;
+				    dailyListIndex++;
 				}
-				dailyIndex.Add(i2++);
+			    //dailyIndex.Add(dailyIndex);
+			    dailyJSONIndex++;
+	  	        dailyListIndex++;
             }
 
 			//TODOS
@@ -798,7 +912,7 @@ public class UserStats : MonoBehaviour
     public IEnumerator ScrollCalc()
     {
 
-        fullY = Math.Max(habitList.Count, Math.Max(todoList.Count, Math.Max(dailyList.Count, rewardList.Count)));
+        fullY = Math.Max(habitList.Count, Math.Max(todoList.Count, Math.Max(dailyListArray.Count, rewardList.Count)));
         yield return new WaitForSeconds(0.0f);
     }
 
@@ -954,7 +1068,7 @@ public class UserStats : MonoBehaviour
         GUI.EndGroup();
             
         //List Dailies
-        GUI.BeginGroup(new Rect(Screen.width/4 + 5, Screen.height / 6, Screen.width, dailyList.Count * buttDistance + buttAddSpread));
+        GUI.BeginGroup(new Rect(Screen.width/4 + 5, Screen.height / 6, Screen.width, dailyListArray.Count * buttDistance + buttAddSpread));
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Dailies");
 		//int ferk = (int)Screen.width * 24 / 100 - 4;
 		//Debug.Log ("textLength is " + ferk);
@@ -972,24 +1086,24 @@ public class UserStats : MonoBehaviour
 			}
 
 		}
-        GUI.BeginGroup(new Rect(0, 60, Screen.width, dailyList.Count * buttDistance + buttAddSpread));
+        GUI.BeginGroup(new Rect(0, 60, Screen.width, dailyListArray.Count * buttDistance + buttAddSpread));
                 
                 
-            for (i = 0; i < dailyList.Count; i++)
+            for (i = 0; i < dailyListArray.Count; i++)
             {
 
-                GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), dailyList[i]);
+		        GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), dailyListArray[i].dailyName);
 				GUI.Box(new Rect(0, i * buttDistance, 40 , buttHeight), emptyTex);
 				
-                dailyListClicked[i] = GUI.Toggle(new Rect(togPosX , i * buttDistance+togPosY, Screen.width * 24 / 100 , buttDistance ), dailyToggleList[i], dailyList[i]);
+				dailyListArray[i].dailyListClicked = GUI.Toggle(new Rect(togPosX , i * buttDistance+togPosY, Screen.width * 24 / 100 , buttDistance ), dailyListArray[i].dailyToggle, dailyListArray[i].dailyName);
                         
-                if(dailyListClicked[i] != dailyToggleList[i])
+				if(dailyListArray[i].dailyListClicked != dailyListArray[i].dailyToggle)
                 {
-                    dailyToggleList[i] = dailyListClicked[i];
+			        dailyListArray[i].dailyToggle = dailyListArray[i].dailyListClicked;
                     StartCoroutine(DailyUpdate());
                 }
-            }
-            GUI.EndGroup();
+        	}
+        	GUI.EndGroup();
         GUI.EndGroup();
 
         //List Todos
