@@ -76,6 +76,12 @@ public class HabitDatav1
 		return tmpChecklistObject;
 	}
 
+	public JSONNode getUpdatedTodoCheckListByIndexes(int todoIndex, int todoChecklistIndex, bool completed) {
+		JSONNode tmpChecklistObject = root ["todos"] [todoIndex] ["checklist"];
+		tmpChecklistObject [todoChecklistIndex] ["completed"].AsBool = completed;
+		return tmpChecklistObject;
+	}
+
     public virtual bool setupData(JSONNode data)
     {
 

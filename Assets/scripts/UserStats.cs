@@ -98,12 +98,35 @@ public class UserStats : MonoBehaviour
 	//private List<int> dailyChecklistIndex = new List<int> ();
 	//private List<int> dailyIndex = new List<int> ();
 		
-    
-    public List<string> todoList = new List<string>();
+	public class todoListDetail {
+		public string todoName;
+		public string todoID;
+		public bool todoListClicked;
+		public bool todoToggle;
+		public int todoJSONIndex;
+		public bool todoIsChecklist;
+		public int todoJSONChecklistIndex;
+		public int todoChecklistParent;
+		// Constructor to create object.
+		public todoListDetail(string Name, string ID, bool ListClicked, bool Toggle, int JSONIndex, bool IsChecklist, int JSONChecklistIndex, int ChecklistParent) {
+			todoName = Name;
+			todoID = ID;
+			todoListClicked = ListClicked;
+			todoToggle = Toggle;
+			todoJSONIndex = JSONIndex;
+			todoIsChecklist = IsChecklist;
+			todoJSONChecklistIndex = JSONChecklistIndex;
+			todoChecklistParent = ChecklistParent;
+		}
+	};
+	
+	public List<todoListDetail> todoListArray = new List<todoListDetail>();
+    /*public List<string> todoList = new List<string>();
     public List<string> todoIDList = new List<string>();
     public List<bool> todoToggleList = new List<bool>();
-    public List<bool> todoCompleted = new List<bool>();
-    
+    */
+    public List<bool> todoCompletedList = new List<bool>();
+
     
     public List<string> rewardList = new List<string>();
     public List<string> rewardIDList = new List<string>();
@@ -416,10 +439,7 @@ public class UserStats : MonoBehaviour
 				var dailyResponse = response.Text;
 				Type t = dailyResponse.GetType();
 				Debug.Log("dailyResponse type is " + t.FullName);
-				//if (dailyResponse is Hashtable)
-				//{
-				
-				//}
+
 				
 			}
 		}
@@ -478,12 +498,13 @@ public class UserStats : MonoBehaviour
 	            //}
 	            
 			}
+
 		}
 	}
 
 //Daily Completed end
 
-    public IEnumerator TodoUpdate()
+ /*   public IEnumerator TodoUpdate()
     {
         string tUrl = " ";
 
@@ -531,7 +552,170 @@ public class UserStats : MonoBehaviour
 
 
         }
-    }
+    }*/
+
+	public IEnumerator TodoUpdate()
+	{
+		Debug.Log("todo update is called");
+		if (todoListArray[i].todoIsChecklist == true) 
+		{
+			Debug.Log ("Checklist item if has been called");
+			var dUrl = url + "/tasks/" + todoListArray[todoListArray[i].todoChecklistParent].todoID;
+			Debug.Log ("dUrl is = " + dUrl);
+			//string checklist =""; //wtf does this do?
+			
+			var request = new HTTP.Request("PUT", dUrl);
+			
+			request.headers.Set("x-api-key", key);
+			request.headers.Set("x-api-user", uid);
+			request.headers.Set("Content-Type", "application/json");
+			
+			string strTempJSON = "{\"checklist\": " + userData.getUpdatedCheckListByIndexes(
+				todoListArray[i].todoJSONIndex,
+				todoListArray[i].todoJSONChecklistIndex,
+				todoListArray[i].todoToggle).ToString () + "}";
+			
+			Debug.Log ("Updated result: " + strTempJSON);
+			//checklistObject["todos"]["checklist"][
+			request.Text = strTempJSON;
+			//foreach checklistItem in checklist
+			//it++'
+			//checklist = checklist + "{\"text\":\" + check[it] + "\",\"id\":\" + checkListID + "\",\"completed\": todoT}"
+			//Don't know how to associate checklist item with checklist parent.  Whole problem just ties brain in knots and causes headache.
+			if (todoListArray[i].todoToggle == true)
+			{
+				//				request.Text = "{\"completed\" : true}";
+				//request.Text = "{\"direction\": \"up\"}";
+				Debug.Log("Should be checked");
+				animation.PlayQueued("smile", QueueMode.CompleteOthers);
+			}
+			else if (todoListArray[i].todoToggle == false)
+			{
+				//				request.Text = 	"{\"direction\": \"down\"}";
+				animation.PlayQueued("frown", QueueMode.CompleteOthers);
+				Debug.Log("Should be unchecked");
+			}
+			//}
+			request.Send();
+			while (!request.isDone) yield return new WaitForEndOfFrame();
+			
+			if (request.exception != null)
+			{
+				Debug.LogError(request.exception);
+			}
+			else
+			{
+				//StartCoroutine(HrpgJson());
+				var response = request.response;
+				//inspect response code
+				Debug.Log(response.status);
+				//inspect headers
+				Debug.Log(response.headers.Get("Content-Type"));
+				//Get the body as a byte array
+				//Debug.Log(response.bytes);
+				//Or as a string
+				Debug.Log(response.Text);
+				var todoResponse = response.Text;
+				Type t = todoResponse.GetType();
+				Debug.Log("todoResponse type is " + t.FullName);
+				//if (todoResponse is Hashtable)
+				//{
+				
+				//}
+				
+			}
+		}
+		else if (todoListArray[i].todoIsChecklist == false) 
+		{
+			/*Debug.Log("Non-Checklist item else if has been called.");
+			var dUrl = url + "/tasks/" + todoListArray[i].todoID;
+			Debug.Log ("dUrl is = " + dUrl);
+			
+			var request = new HTTP.Request("PUT", dUrl);
+
+			request.headers.Set("x-api-key", key);
+			request.headers.Set("x-api-user", uid);
+			request.headers.Set("Content-Type", "application/json");
+			
+			
+			if (todoListArray[i].todoToggle == true)
+			{
+				request.Text = "{\"completed\" : true}";
+				//request.Text = "{\"direction\": \"up\"}";
+				Debug.Log("Should be checked");
+				animation.PlayQueued("smile", QueueMode.CompleteOthers);
+			}
+			else if (todoListArray[i].todoToggle == false)
+			{
+				request.Text = 	"{\"direction\": \"down\"}";
+				animation.PlayQueued("frown", QueueMode.CompleteOthers);
+				Debug.Log("Should be unchecked");
+			}
+			//}
+			*/
+			string tUrl = " ";
+			
+			tUrl = url + "/tasks/" + todoListArray[i].todoID;
+
+			if (todoListArray[i].todoToggle == true)
+			{
+				tUrl = tUrl + "/up";
+				animation.PlayQueued("smile", QueueMode.CompleteOthers);
+			}
+			else if (todoListArray[i].todoToggle == false)
+			{
+				tUrl = tUrl + "/down";
+				animation.PlayQueued("frown", QueueMode.CompleteOthers);
+
+			}
+			var request = new HTTP.Request("POST", tUrl);
+			
+			request.headers.Set("x-api-key", key);
+			request.headers.Set("x-api-user", uid);
+			request.headers.Set("Content-Type", "application/json");
+			request.Send();
+			while (!request.isDone) yield return new WaitForEndOfFrame();
+
+			request.Send();
+			while (!request.isDone) yield return new WaitForEndOfFrame();
+			
+			if (request.exception != null)
+			{
+				Debug.LogError(request.exception);
+			}
+			else
+			{
+				//StartCoroutine(HrpgJson());
+				var response = request.response;
+				//inspect response code
+				Debug.Log(response.status);
+				//inspect headers
+				Debug.Log(response.headers.Get("Content-Type"));
+				//Get the body as a byte array
+				//Debug.Log(response.bytes);
+				//Or as a string
+				Debug.Log(response.Text);
+				var todoResponse = response.Text;
+				Type t = todoResponse.GetType();
+				Debug.Log("todoResponse type is " + t.FullName);
+				JSONNode tU = JSONNode.Parse(response.Text);
+				float lvlUp = tU["lvl"].AsFloat;
+				
+				if (lvlUp == lvl)
+				{
+					lvl = lvlUp;
+					health = tU["hp"].AsFloat;
+					gp = tU["gp"].AsFloat;
+					xp = tU["exp"].AsFloat;
+				}
+				else
+				{
+					StartCoroutine(HrpgJson());
+				}
+				
+			}
+		}
+	}
 
 
     
@@ -609,9 +793,9 @@ public class UserStats : MonoBehaviour
             //Debug.Log(response.bytes);
             //Or as a string
             Debug.Log(response.Text);
-            //var dailyResponse = response.Text;
-            //Type t = dailyResponse.GetType();
-            //Debug.Log("dailyResponse type is " + t.FullName);
+            //var todoResponse = response.Text;
+            //Type t = todoResponse.GetType();
+            //Debug.Log("todoResponse type is " + t.FullName);
             //if (dailyResponse is Hashtable)
             {
 
@@ -709,7 +893,7 @@ public class UserStats : MonoBehaviour
             rewards = ht2["rewards"] as ArrayList;
 			*/
 
-			//STATS
+			//STATS populate
 			health = stats["hp"].AsFloat;
 			maxHealth = stats["maxHealth"].AsFloat;
 			name = userData.ProfileName;
@@ -728,7 +912,7 @@ public class UserStats : MonoBehaviour
 
             //clears list so they can be repopulated on refresh, and populates the display lists(habits, todos, dailies, rewards)
 
-			//HABITS
+			//HABITS populate
 			int i =0;
 			habitList.Clear();
             habitUp.Clear();
@@ -808,7 +992,7 @@ public class UserStats : MonoBehaviour
 
             }
                 
-            //DAILIES
+            //DAILIES populate
             //dailyList.Clear();
 //            dailyToggleList.Clear();
 //	 		  dailyListClicked.Clear();
@@ -879,20 +1063,90 @@ public class UserStats : MonoBehaviour
 	  	        dailyListIndex++;
             }
 
-			//TODOS
-            todoList.Clear();
+			//TODOS populate DEPRECATED
+            /*todoList.Clear();
             todoToggleList.Clear();
             todoIDList.Clear();
-            todoCompleted.Clear();
+			todoCompletedList.Clear();
             foreach (JSONNode todo in todos2)
             {
                 todoList.Add(todo["text"]);
 				todoToggleList.Add(todo["completed"].AsBool);
-				todoCompleted.Add(todo["completed"].AsBool);
+				todoCompletedList.Add(todo["completed"].AsBool);
                 todoIDList.Add(todo["id"]);
             }
+            */
+			
+			//TODOS populate
+			todoListArray.Clear ();
+			todoCompletedList.Clear();
 
-			//REWARDS
+		    int todoListIndex;
+		    todoListIndex = 0;
+
+		    int todoListCurrentParent;
+			int todoJSONIndex;
+		    todoJSONIndex = 0;
+		    //todoListDetail tmpDetail; // THIS WILL NOT BE USED.
+            foreach (JSONNode todo in todos2)
+            {
+//              todoList.Add(todo["text"]);
+//              todoToggleList.Add(todo["completed"].AsBool);
+//				todoListClicked.Add(todo["completed"].AsBool);
+//              todoIDList.Add(todo["id"]);
+//				todoChecklistIndex.Add(i3);
+//			    isChecklist.Add(false);
+				todoCompletedList.Add (todo["completed"].AsBool);
+			    todoListArray.Add(new todoListDetail(
+				  todo["text"],
+				  todo["id"],
+				  todo["completed"].AsBool,
+				  todo["completed"].AsBool,
+				  todoJSONIndex,
+				  false,
+				  0,
+				  0
+				));
+			    //todoListArray.Add (tmpDetail);
+
+			    todoListCurrentParent = todoListIndex;
+			    
+				Debug.Log ("This item is not a checklist number"+ todoJSONIndex);
+
+			    int todoChecklisttIndex;
+	            todoChecklisttIndex = 0;
+
+				foreach (JSONNode checkItem in todo["checklist"].AsArray)
+				{
+//					todoList.Add("    " + checkItem["text"]);
+//					todoToggleList.Add(checkItem["completed"].AsBool);
+//					todoListClicked.Add(checkItem["completed"].AsBool);
+//					todoIDList.Add(checkItem["id"]);
+//					todoChecklistIndex.Add(checklistIndex++);
+//					isChecklist.Add(true);
+					//todoChecklist
+					todoCompletedList.Add (todo["completed"].AsBool);
+				    todoListArray.Add (new todoListDetail(
+					  "(" + todoJSONIndex + " . " + todoChecklisttIndex + ") " + checkItem["text"],
+					  checkItem["id"],
+					  checkItem["completed"].AsBool,
+					  checkItem["completed"].AsBool,
+					  todoJSONIndex,
+					  true,
+					  todoChecklisttIndex,
+					  todoListCurrentParent
+					));
+				    //todoListArray.Add (tmpDetail);
+				    Debug.Log ("This item is checklist item number "+ todoChecklisttIndex +" from todo " + todoListArray[todoListCurrentParent].todoName);
+				    todoChecklisttIndex++;
+				    todoListIndex++;
+				}
+			    //todoIndex.Add(todoIndex);
+			    todoJSONIndex++;
+	  	        todoListIndex++;
+            }
+
+			//REWARDS populate
             rewardList.Clear();
             rewardValue.Clear();
             rewardIDList.Clear();
@@ -912,7 +1166,7 @@ public class UserStats : MonoBehaviour
     public IEnumerator ScrollCalc()
     {
 
-        fullY = Math.Max(habitList.Count, Math.Max(todoList.Count, Math.Max(dailyListArray.Count, rewardList.Count)));
+        fullY = Math.Max(habitList.Count, Math.Max(todoListArray.Count, Math.Max(dailyListArray.Count, rewardList.Count)));
         yield return new WaitForSeconds(0.0f);
     }
 
@@ -1107,7 +1361,7 @@ public class UserStats : MonoBehaviour
         GUI.EndGroup();
 
         //List Todos
-        GUI.BeginGroup(new Rect(Screen.width/4 * 2 + 5, Screen.height / 6, Screen.width, todoList.Count * buttDistance + buttAddSpread));
+        GUI.BeginGroup(new Rect(Screen.width/4 * 2 + 5, Screen.height / 6, Screen.width, todoListArray.Count * buttDistance + buttAddSpread));
         GUI.Box(new Rect(0, 0, Screen.width * 24 / 100, buttHeight), "Todos");
 		GUI.SetNextControlName ("todoAdd");
 		todoAdd = GUI.TextField(new Rect(0, 30, Screen.width * 24 / 100-20, buttHeight), todoAdd, 100);
@@ -1122,29 +1376,45 @@ public class UserStats : MonoBehaviour
 			}
 			
 		}
-        GUI.BeginGroup(new Rect(0, 60, Screen.width, todoList.Count * buttDistance + buttAddSpread));
-
-            for (i = 0; i < todoList.Count; i++)
+        GUI.BeginGroup(new Rect(0, 60, Screen.width, todoListArray.Count * buttDistance + buttAddSpread));
+			//Old todo gui code.  It worked before I changed everything.  Can't remember exactly how it worked, though.
+            /*for (i = 0; i < todoListArray.Count; i++)
             {
 				
-                if (todoCompleted[i] == false)
+                //if (todoCompletedList[i] == false)
+				if (todoListArray[i].todoToggle == false)
                 {
-                    GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), todoList[i]);
+                    GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), todoListArray[i].todoName);
 					GUI.Box(new Rect(0, i * buttDistance, 40 , buttHeight), emptyTex);
 
 
-				if (todoToggleList[i] = GUI.Toggle(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttDistance), todoToggleList[i], todoList[i]))
+				if (todoListArray[i].todoListClicked = GUI.Toggle(new Rect(0, i * buttDistance, Screen.width * 24 / 100, buttDistance), todoListArray[i].todoListClicked, todoListArray[i].todoName))
                     {
 						animation.PlayQueued("smile", QueueMode.CompleteOthers);
                         StartCoroutine(TodoUpdate());
-                        todoCompleted[i] = true;
-                        todoToggleList[i] = true;
-                        Debug.Log("you pressed button " + todoList[i]);
+                        //todoCompletedList[i] = true;
+                        todoListArray[i].todoListClicked = true;
+                        Debug.Log("you pressed button " + todoListArray[i]);
 
                     }
                 }
+	 		}*/
+			for (i = 0; i < todoListArray.Count; i++)
+			{
+				
+				GUI.Box(new Rect(20, i * buttDistance, Screen.width * 24 / 100-20, buttHeight), todoListArray[i].todoName);
+				GUI.Box(new Rect(0, i * buttDistance, 40 , buttHeight), emptyTex);
+				
+				todoListArray[i].todoListClicked = GUI.Toggle(new Rect(togPosX , i * buttDistance+togPosY, Screen.width * 24 / 100 , buttDistance ), todoListArray[i].todoToggle, todoListArray[i].todoName);
+				
+				if(todoListArray[i].todoListClicked != todoListArray[i].todoToggle)
+				{
+					todoListArray[i].todoToggle = todoListArray[i].todoListClicked;
+					StartCoroutine(TodoUpdate());
+				}
+			}
 
-            }
+            
 
 
             GUI.EndGroup();
