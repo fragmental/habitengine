@@ -710,8 +710,11 @@ public class UserStats : MonoBehaviour
 				}
 				else
 				{
+					animation.PlayQueued("jump", QueueMode.CompleteOthers);
 					StartCoroutine(HrpgJson());
 				}
+
+
 				
 			}
 		}
