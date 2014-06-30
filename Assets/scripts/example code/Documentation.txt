@@ -1,0 +1,87 @@
+>Preferences
+	>Hair
+	size
+	shirt
+	skin
+
+>items	
+	>gear
+		>costume
+		>equipped
+
+
+Example Items object
+"items": {
+    "lastDrop": {
+      "count": 0,
+      "date": "2014-03-30T23:48:10.180Z"
+    },
+    "quests": {
+      "egg": 1,
+      "evilsanta": 1
+    },
+    "mounts": {},
+    "food": {
+      "Cake_Base": 1,
+      "Cake_CottonCandyBlue": 1,
+      "Cake_CottonCandyPink": 1,
+      "Cake_Desert": 1,
+      "Cake_Golden": 1,
+      "Cake_Red": 1,
+      "Cake_Shade": 1,
+      "Cake_Skeleton": 1,
+      "Cake_White": 1,
+      "Cake_Zombie": 1,
+      "Chocolate": 1,
+      "CottonCandyBlue": 2,
+      "CottonCandyPink": 1,
+      "Honey": 3,
+      "Meat": 2,
+      "Milk": 1,
+      "Potatoe": 1,
+      "RottenMeat": 1,
+      "Strawberry": 1
+    },
+    "hatchingPotions": {
+      "CottonCandyBlue": 1,
+      "CottonCandyPink": 1,
+      "Desert": 1,
+      "Red": 1,
+      "Shade": 2,
+      "White": 3,
+      "Zombie": 2
+    },
+    "eggs": {
+      "BearCub": 1,
+      "Cactus": 2,
+      "Dragon": 1,
+      "FlyingPig": 3,
+      "Fox": 1,
+      "TigerCub": 4,
+      "Wolf": 4
+    },
+    "pets": {
+      "Turkey-Base": 5
+    },
+    "special": {
+      "valentineReceived": [],
+      "snowball": 0
+    },
+    "gear": {
+      "costume": {
+        "shield": "shield_base_0",
+        "head": "head_base_0",
+        "armor": "armor_base_0",
+        "weapon": "weapon_base_0"
+      },
+      "equipped": {
+        "shield": "shield_base_0",
+        "head": "head_base_0",
+        "armor": "armor_base_0",
+        "weapon": "weapon_base_0"
+      },
+      "owned": {
+        "weapon_warrior_0": false
+      }
+    }
+  },

@@ -8,9 +8,9 @@ using HTTP;
 
 public class Login : MonoBehaviour
 {
-    public static string url = "http://beta.habitrpg.com/api/v2/user";
+    //public static string url = "http://beta.habitrpg.com/api/v2/user";
 	//public static string url = "https://www.habitrpg.com/api/v2/user";
-    //public static string url = "http://fragmental.no-ip.org:3000/api/v2/user";
+    public static string url = "http://fragmental.no-ip.org:3000/api/v2/user";
     private string aUrl = url + "/auth/local";
 	private string cUrl = url + "/status";
     //public static string user = "b2f17791-3247-462b-8cfe-86e9f9bca28f";

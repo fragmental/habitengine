@@ -911,6 +911,35 @@ public class UserStats : MonoBehaviour
 			//Debug.Log("xp type is " + t.FullName);
             //Debug.Log("level = " + nextLevel);
 			//barDisplay =  health;
+			
+//preferences assignation
+			var preferences = userData.Preferences;
+			var hair = preferences["hair"];
+			var size = preferences["size"];
+			var shirt = preferences["shirt"];
+			var skin = preferences["skin"];
+
+			var mustache = hair["mustache"];
+			var color = hair["color"];
+			
+			Debug.Log ("mustache is "+mustache);
+			Debug.Log ("nested color is"+preferences["hair"]["color"]);
+			Debug.Log ("size is "+size);
+			
+
+//gear assignation
+			var items = userData.Items;
+		var cShield = items["gear"]["costume"]["shield"];
+		var cHead =	items["gear"]["costume"]["head"];
+		var cArmor = items["gear"]["costume"]["armor"];
+		var cWeapon = items["gear"]["costume"]["weapon"];
+		var eShield = items["gear"]["equipped"]["shield"];
+		var eHead =	items["gear"]["equipped"]["head"];
+		var eArmor = items["gear"]["equipped"]["armor"];
+		var eWeapon = items["gear"]["equipped"]["weapon"];
+		var owned = items["gear"]["owned"]["weapon_warrior_0"];
+			
+
 						
 
             //clears list so they can be repopulated on refresh, and populates the display lists(habits, todos, dailies, rewards)

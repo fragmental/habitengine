@@ -54,6 +54,16 @@ public class HabitDatav1
 	{
 		get { return root["rewards"]; }
 	}
+
+	public JSONNode Preferences
+	{
+		get { return root["preferences"]; }
+	}
+
+	public JSONNode Items
+	{
+		get { return root["items"]; }
+	}
 	/*public bool setupData(JSONNode data) 
 	{
 	try 
