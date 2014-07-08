@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
@@ -7,10 +7,24 @@ public class SpriteTest : MonoBehaviour {
 	private HabitDatav1 userData;
 	public JSONArray dailies;
 	public List<Sprite> avatarSkin;
+	public List<Sprite> avatarHair;
+	public List<Sprite> avatarSize;
+	public List<Sprite> avatarShirt;
+	public List<Sprite> avatarShield;
+	public List<Sprite> avatarHead;
+	public List<Sprite> avatarArmor;
+	public List<Sprite> avatarWeapon;
 	//use type Sprite or Texture2d?  Methinks Sprite
+	public Texture2D skinTest;
+	public Sprite spriteSkin;
+	public SpriteRenderer artwork;
+
+
 
 
 	void Start () {
+		artwork.sprite = spriteSkin;
+		//artwork = GetComponent<blah>();
 		userData = new HabitDatav1(PlayerPrefs.GetString("jsonSave"));
 		JSONArray dailies = userData.Dailies.AsArray;
 
@@ -58,6 +72,10 @@ public class SpriteTest : MonoBehaviour {
 	void OnGUI()
 	{
 		//GUITexture
+		GUI.DrawTexture (new Rect(10, 9, 256, 256), skinTest, ScaleMode.ScaleToFit, true);
+		//SpriteRenderer ();
+		//GUI.DrawTexture (new Rect(10, 9, 90, 90), spriteSkin, ScaleMode.StretchToFill, true, 2.5F);
+		//Sprite spriteSkin;
 	}
 	
 	
