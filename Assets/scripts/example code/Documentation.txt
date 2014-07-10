@@ -4,6 +4,30 @@
 	shirt
 	skin
 
+/*preferences:
+	 * timezoneOffset int
+	 * toolbarCollapsed bool
+	 * advancedCollapsed bool
+	 * tagsCollapsed bool
+	 * newTaskEdit bool
+	 * disableClasses bool
+	 * stickyHeader bool
+	 * sleep bool
+	 * allocationMode string
+	 * shirt string
+	 * skin string
+	 * hideHeader bool
+	 * hair obj
+	 * 	mustache int
+	 * 	beard int
+	 * 	bangs int
+	 * 	base int
+	 * 	color string
+	 * size string
+	 * daystart int
+	 */
+
+
 >items	
 	>gear
 		>costume

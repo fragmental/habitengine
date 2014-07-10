@@ -18,13 +18,30 @@ public class SpriteTest : MonoBehaviour {
 	public Texture2D skinTest;
 	public Sprite spriteSkin;
 	public SpriteRenderer artwork;
+	//private Test_Renderer testRenderer;
 
 
-
+	void Awake()
+	{
+		//testRenderer = GetComponent<Test_Renderer>();
+	}
 
 	void Start () {
-		artwork.sprite = spriteSkin;
+		//arwork = GameObject.GetComponent<Test_Renderer>.sprite as SpriteRender;
+		//artwork.sprite = spriteSkin;
+		/*does not exist in the current context*/
+		//artwork.sprite = GetComponent<Sprite> ("GrimReaper");
+		//artwork.sprite = Resources.Load ("GrimReaper", typeof(Sprite)) as Sprite;
+		//artwork.sprite = Resources.Load<Sprite> ("Textures/spritesmith/misc/GrimReaper.png");
+		//(Added to "Resources" folder.  Cannot cast from source type to destination type) artwork.sprite = Resources.Load<Sprite> ("GrimReaper");
+		artwork.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/skin/skin_"+skinTest+".png");
+
+		if(artwork.sprite == null) Debug.LogError("arwork.sprite is null");
 		//artwork = GetComponent<blah>();
+
+		//skinTest = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/misc/GrimReaper.png");
+		//(says it's null) skinTest = Resources.LoadAssetAtPath<Texture2D> ("GrimReaper");
+
 		userData = new HabitDatav1(PlayerPrefs.GetString("jsonSave"));
 		JSONArray dailies = userData.Dailies.AsArray;
 
@@ -66,6 +83,8 @@ public class SpriteTest : MonoBehaviour {
 		Debug.Log (eWeapon);
 		var owned = items["gear"]["owned"]["weapon_warrior_0"];
 		Debug.Log (owned);
+
+		artwork.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/skin/skin_"+skin+".png");
 		
 	}
 
