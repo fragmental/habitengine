@@ -4,21 +4,21 @@ using System.Collections.Generic;
 using SimpleJSON;
 using System;
 
-public class Avatar : MonoBehaviour {
+public class AvatarOnGUI : MonoBehaviour {
 	private HabitDatav1 userData;
 
 
 	//public Texture2D skinTest;
 	//public Sprite spriteSkin;
-	public SpriteRenderer avatarHair;
-	public SpriteRenderer avatarSkin;
+	public Texture2D avatarHair;
+	public Texture2D avatarSkin;
 
-	public SpriteRenderer avatarArmor;
-	public SpriteRenderer avatarHead;
-	public SpriteRenderer avatarWeapon;
-	public SpriteRenderer avatarShield;
+	public Texture2D avatarArmor;
+	public Texture2D avatarHead;
+	public Texture2D avatarWeapon;
+	public Texture2D avatarShield;
 
-	public SpriteRenderer avatarPet;
+	public Texture2D avatarPet;
 	public SpriteRenderer avatarMount;
 	/*preferences:
 	 * timezoneOffset int
@@ -42,12 +42,16 @@ public class Avatar : MonoBehaviour {
 	 * size string
 	 * daystart int
 	 */
+	public float left = 10;
+	public float top =9;
+	public float width =256;
+	public float height = 256;
 
 	void Start () {
 
 		userData = new HabitDatav1(PlayerPrefs.GetString("jsonSave"));
 
-		
+
 
 		//preferences assignation
 		var preferences = userData.Preferences;
@@ -105,63 +109,74 @@ public class Avatar : MonoBehaviour {
 		{
 			hBangs = 3;
 		}*/
-		avatarHair.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/customize/hair/hair_bangs_"+hBangs+"_"+hColor+".png");
+		avatarHair = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/customize/hair/hair_bangs_"+hBangs+"_"+hColor+".png");
 		Debug.Log ("Assets/Textures/spritesmith/customize/hair/hair_bangs_" + hBangs + "_" + hColor + ".png");
 
 
-		avatarSkin.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/customize/skin/skin_"+skin+".png");
+		avatarSkin = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/customize/skin/skin_"+skin+".png");
 
 		//weapon
 		//string sWeapon = cWeapon;
 		if (cWeapon == "shield_base_0") 
 		{
-			avatarWeapon.enabled = false;
+			//avatarWeapon.enabled = false;
 		}
 
 		else
 		{
-			avatarWeapon.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/gear/weapon/"+cWeapon+".png");
+			avatarWeapon = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/gear/weapon/"+cWeapon+".png");
 		}
 		/* doesn't work
 		 * else if(sWeapon.Contains ("special"))
 		{
-			avatarWeapon.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/gear/event/"+cWeapon+".png");
+			avatarWeapon = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/gear/event/"+cWeapon+".png");
 		}*/
 		//head
 		if (cHead == "head_base_0") 
 		{
 			cHead = "head_0";
 		}
-		avatarHead.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/gear/head/"+cHead+".png");
+		avatarHead = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/gear/head/"+cHead+".png");
 
 		//armor
 		if (cArmor == "armor_base_0") 
 		{
-			avatarArmor.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/customize/shirt/" + size + "_shirt_" + shirt + ".png");
+			avatarArmor = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/customize/shirt/" + size + "_shirt_" + shirt + ".png");
 		}
 		else
 		{
-			avatarArmor.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/gear/armor/" + size + "_" + cArmor + ".png");
+			avatarArmor = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/gear/armor/" + size + "_" + cArmor + ".png");
 		}
 
 		//shield
 		if (cShield == "shield_base_0")
 		{
-			avatarShield.enabled = false;
+			//avatarShield.enabled = false;
 		}
 		else
 		{
-			avatarShield.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/gear/shield/"+cShield+".png");
+			avatarShield = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/gear/shield/"+cShield+".png");
 		}
 
 		//pet
-		avatarPet.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/stable/pets/Pet-"+pet+".png");
+		avatarPet = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/stable/pets/Pet-"+pet+".png");
 		Debug.Log ("Assets/Textures/spritesmith/stable/pets/Pet-" + pet + ".png");
-		//avatarMount.sprite = Resources.LoadAssetAtPath<Sprite> ("Assets/Textures/spritesmith/skin/skin_"+skin+".png");
+		//avatarMount = Resources.LoadAssetAtPath<Texture2D> ("Assets/Textures/spritesmith/skin/skin_"+skin+".png");
 
 
 	 
 		
+	}
+
+	void OnGUI()
+	{
+		//GUITexture
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarSkin, ScaleMode.ScaleToFit);
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarHair, ScaleMode.ScaleToFit);
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarArmor, ScaleMode.ScaleToFit);
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarWeapon, ScaleMode.ScaleToFit);
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarHead, ScaleMode.ScaleToFit);
+		GUI.DrawTexture (new Rect (left, top, width, height), avatarShield, ScaleMode.ScaleToFit);
 	}
 	
 
