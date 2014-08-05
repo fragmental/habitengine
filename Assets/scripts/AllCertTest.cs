@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/*using UnityEngine;
 using System.Collections;
 using HTTP;
 using System.Net;
@@ -70,3 +70,4 @@ public class AllCertTest : MonoBehaviour {
 	
 	}
 }
+*/

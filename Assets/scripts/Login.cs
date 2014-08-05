@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using HTTP;
+using SimpleJSON;
 //using HTTP;
 
 
@@ -10,10 +11,10 @@ public class Login : MonoBehaviour
 {
     //public string bUrl = "http://beta.habitrpg.com/api/v2/user";
 	//public string bUrl = "https://www.habitrpg.com/api/v2/user";
-	public string bUrl = "http://fragmental.no-ip.org:3000/api/v2
-    public static string url = bURL+ "/user";
-    private string aUrl = bUrl + "/auth/local";
-	private string cUrl = bUrl + "/status";
+	public string bUrl = "http://fragmental.no-ip.org:3000/api/v2";
+	public static string url ;
+	private string aUrl ;
+	private string cUrl;
     //public static string user = "b2f17791-3247-462b-8cfe-86e9f9bca28f";
     public static string uid = "";
     //public static string key = "45482a67-8c71-4595-bfa5-f19ddeca8d95";
@@ -64,6 +65,14 @@ public class Login : MonoBehaviour
         // Main label:
     void Start()
     {
+		//moved down here, because unity started to inexplicably whine.  Might have been my fault for for mistyping a variable name :/ -sjm
+		 url = bUrl+ "/user";
+		 aUrl = bUrl + "/user/auth/local";
+		 cUrl = bUrl + "/status";
+		///moved
+
+
+
 		//var sockOut =Security.PrefetchSocketPolicy("http://fragmental.no-ip.org", 843);
 		//Security.PrefetchSocketPolicy("http://fragmental.no-ip.org", 843);
 
@@ -110,9 +119,13 @@ public class Login : MonoBehaviour
         Debug.Log("auth is "+auth);
         var request = new HTTP.Request("POST", aUrl);
 
+        //uniweb
+        //request.headers.Set("Content-Type", "application/json");
         
-        request.headers.Set("Content-Type", "application/json");
-        request.Text = auth;
+		//unityhttp
+		request.SetHeader("Content-Type", "application/json");
+
+		request.Text = auth;
         
          
 
@@ -138,15 +151,28 @@ public class Login : MonoBehaviour
             //inspect response code
             Debug.Log(response.status);
             //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+			//Debug.Log(response.headers.Get("Content-Type"));
+			
+			//unityhttp
+			Debug.Log (response.GetHeaders("Content-Type"));
+
+
             //Get the body as a byte array
             //Debug.Log(response.bytes);
             //Or as a string
             //Debug.Log(response.Text);
             //string authResponse = response.Text;
             //Type t = authResponse.GetType();
-            Hashtable authResponse = JsonSerializer.Decode(response.Text) as Hashtable;
-            //Debug.Log("Type is " + t.FullName);
+
+			//uniweb
+			//Hashtable authResponse = JsonSerializer.Decode(response.Text) as Hashtable;
+			//unityhttp
+			Hashtable authResponse = JSON.JsonDecode(response.Text) as Hashtable;
+            
+
+			//Debug.Log("Type is " + t.FullName);
             //Debug.Log(authObject["id"]);
 
             if (response.status == 200)
@@ -192,7 +218,13 @@ public class Login : MonoBehaviour
 			//inspect response code
 			Debug.Log(response.status);
 			//inspect headers
-			Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+			//Debug.Log(response.headers.Get("Content-Type"));
+
+			//unityhttp
+			Debug.Log (response.GetHeaders("Content-Type"));
+
 			//Get the body as a byte array
 			//Debug.Log(response.bytes);
 			//Or as a string
@@ -217,15 +249,23 @@ public class Login : MonoBehaviour
     {
         var request = new HTTP.Request("GET", url);
         //set headers
-		request.headers.Set("x-api-key", key);
-        request.headers.Set("x-api-user", uid);
+
+		//uniweb
+		//request.headers.Set("x-api-key", key);
+       	//request.headers.Set("x-api-user", uid);
+
+		//unityhttp
+		request.SetHeader("x-api-key", key);
+		request.SetHeader("x-api-user", uid);
+
+
         request.Send();
         while (!request.isDone) yield return new WaitForEndOfFrame();
 
 
         if (request.exception != null)
         {
-            Debug.LogError(request.exception);
+          	 Debug.LogError(request.exception);
             error = true;
             
         }
@@ -236,7 +276,13 @@ public class Login : MonoBehaviour
             //inspect response code
             Debug.Log(response.status);
             //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+            //Debug.Log(response.headers.Get("Content-Type"));
+
+			//unityhttp
+			Debug.Log(response.GetHeaders("Content-Type"));
+
             //Get the body as a byte array
             //Debug.Log(response.bytes);
             //Or as a string

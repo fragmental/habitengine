@@ -256,10 +256,18 @@ public class UserStats : MonoBehaviour
         
                 
         var request = new HTTP.Request("POST", hUrl);
-                
-        request.headers.Set("x-api-key", key);
-        request.headers.Set("x-api-user", uid);
-        request.headers.Set("Content-Type", "application/json");
+        
+		//uniweb
+        //request.headers.Set("x-api-key", key);
+        //request.headers.Set("x-api-user", uid);
+        //request.headers.Set("Content-Type", "application/json");
+
+		//unityhttp
+		request.SetHeader("x-api-key", key);
+		request.SetHeader("x-api-user", uid);
+		request.SetHeader("Content-Type", "application/json");
+
+
         request.Send();
         while (!request.isDone) yield return new WaitForEndOfFrame();
 
@@ -274,7 +282,13 @@ public class UserStats : MonoBehaviour
             //inspect response code
             Debug.Log(response.status);
             //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+            //Debug.Log(response.headers.Get("Content-Type"));
+
+			//unityhttp
+			Debug.Log(response.GetHeaders("Content-Type"));
+
             //Get the body as a byte array
             //Debug.Log(response.bytes);
             //Or as a string
@@ -386,10 +400,16 @@ public class UserStats : MonoBehaviour
 			//string checklist =""; //wtf does this do?
 
 			var request = new HTTP.Request("PUT", dUrl);
+
+			//uniweb
+			//request.headers.Set("x-api-key", key);
+			//request.headers.Set("x-api-user", uid);
+			//request.headers.Set("Content-Type", "application/json");
 			
-			request.headers.Set("x-api-key", key);
-			request.headers.Set("x-api-user", uid);
-			request.headers.Set("Content-Type", "application/json");
+			//unityhttp
+			request.SetHeader("x-api-key", key);
+			request.SetHeader("x-api-user", uid);
+			request.SetHeader("Content-Type", "application/json");
 
 			string strTempJSON = "{\"checklist\": " + userData.getUpdatedCheckListByIndexes(
 				dailyListArray[i].dailyJSONIndex,
@@ -431,7 +451,13 @@ public class UserStats : MonoBehaviour
 				//inspect response code
 				Debug.Log(response.status);
 				//inspect headers
-				Debug.Log(response.headers.Get("Content-Type"));
+			
+				//uniweb
+				//Debug.Log(response.headers.Get("Content-Type"));
+				
+				//unityhttp
+				Debug.Log (response.GetHeaders("Content-Type"));
+
 				//Get the body as a byte array
 				//Debug.Log(response.bytes);
 				//Or as a string
@@ -451,9 +477,15 @@ public class UserStats : MonoBehaviour
 			
 			var request = new HTTP.Request("PUT", dUrl);
 			
-			request.headers.Set("x-api-key", key);
-			request.headers.Set("x-api-user", uid);
-			request.headers.Set("Content-Type", "application/json");
+			//uniweb
+			//request.headers.Set("x-api-key", key);
+			//request.headers.Set("x-api-user", uid);
+			//request.headers.Set("Content-Type", "application/json");
+			
+			//unityhttp
+			request.SetHeader("x-api-key", key);
+			request.SetHeader("x-api-user", uid);
+			request.SetHeader("Content-Type", "application/json");
 
 		
 			if (dailyListArray[i].dailyToggle == true)
@@ -484,7 +516,13 @@ public class UserStats : MonoBehaviour
 	            //inspect response code
 	            Debug.Log(response.status);
 	            //inspect headers
-	            Debug.Log(response.headers.Get("Content-Type"));
+
+				//uniweb
+				//Debug.Log(response.headers.Get("Content-Type"));
+				
+				//unityhttp
+				Debug.Log (response.GetHeaders("Content-Type"));
+
 	            //Get the body as a byte array
 	            //Debug.Log(response.bytes);
 	            //Or as a string
@@ -566,9 +604,15 @@ public class UserStats : MonoBehaviour
 			
 			var request = new HTTP.Request("PUT", dUrl);
 			
-			request.headers.Set("x-api-key", key);
-			request.headers.Set("x-api-user", uid);
-			request.headers.Set("Content-Type", "application/json");
+			//uniweb
+			//request.headers.Set("x-api-key", key);
+			//request.headers.Set("x-api-user", uid);
+			//request.headers.Set("Content-Type", "application/json");
+			
+			//unityhttp
+			request.SetHeader("x-api-key", key);
+			request.SetHeader("x-api-user", uid);
+			request.SetHeader("Content-Type", "application/json");
 			
 			string strTempJSON = "{\"checklist\": " + userData.getUpdatedCheckListByIndexes(
 				todoListArray[i].todoJSONIndex,
@@ -610,7 +654,13 @@ public class UserStats : MonoBehaviour
 				//inspect response code
 				Debug.Log(response.status);
 				//inspect headers
-				Debug.Log(response.headers.Get("Content-Type"));
+
+				//uniweb
+				//Debug.Log(response.headers.Get("Content-Type"));
+				
+				//unityhttp
+				Debug.Log (response.GetHeaders("Content-Type"));
+
 				//Get the body as a byte array
 				//Debug.Log(response.bytes);
 				//Or as a string
@@ -670,9 +720,16 @@ public class UserStats : MonoBehaviour
 			}
 			var request = new HTTP.Request("POST", tUrl);
 			
-			request.headers.Set("x-api-key", key);
-			request.headers.Set("x-api-user", uid);
-			request.headers.Set("Content-Type", "application/json");
+			//uniweb
+			//request.headers.Set("x-api-key", key);
+			//request.headers.Set("x-api-user", uid);
+			//request.headers.Set("Content-Type", "application/json");
+			
+			//unityhttp
+			request.SetHeader("x-api-key", key);
+			request.SetHeader("x-api-user", uid);
+			request.SetHeader("Content-Type", "application/json");
+
 			request.Send();
 			while (!request.isDone) yield return new WaitForEndOfFrame();
 
@@ -690,7 +747,13 @@ public class UserStats : MonoBehaviour
 				//inspect response code
 				Debug.Log(response.status);
 				//inspect headers
-				Debug.Log(response.headers.Get("Content-Type"));
+
+				//uniweb
+				//Debug.Log(response.headers.Get("Content-Type"));
+				
+				//unityhttp
+				Debug.Log (response.GetHeaders("Content-Type"));
+
 				//Get the body as a byte array
 				//Debug.Log(response.bytes);
 				//Or as a string
@@ -733,9 +796,16 @@ public class UserStats : MonoBehaviour
                         
         var request = new HTTP.Request("POST", rUrl);
                 
-        request.headers.Set("x-api-key", key);
-        request.headers.Set("x-api-user", uid);
-        request.headers.Set("Content-Type", "application/json");
+		//uniweb
+		//request.headers.Set("x-api-key", key);
+		//request.headers.Set("x-api-user", uid);
+		//request.headers.Set("Content-Type", "application/json");
+		
+		//unityhttp
+		request.SetHeader("x-api-key", key);
+		request.SetHeader("x-api-user", uid);
+		request.SetHeader("Content-Type", "application/json");
+
         request.Send();
         while (!request.isDone) yield return new WaitForEndOfFrame();
 
@@ -750,7 +820,13 @@ public class UserStats : MonoBehaviour
             //inspect response code
             Debug.Log(response.status);
             //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+			//Debug.Log(response.headers.Get("Content-Type"));
+			
+			//unityhttp
+			Debug.Log (response.GetHeaders("Content-Type"));
+
             //Get the body as a byte array
             //Debug.Log(response.bytes);
             //Or as a string
@@ -769,9 +845,16 @@ public class UserStats : MonoBehaviour
 //{"text":"from the api!","type":"todo"}
         var request = new HTTP.Request("POST", tAUrl);
 
-        request.headers.Set("x-api-key", key);
-        request.headers.Set("x-api-user", uid);
-        request.headers.Set("Content-Type", "application/json");
+		//uniweb
+		//request.headers.Set("x-api-key", key);
+		//request.headers.Set("x-api-user", uid);
+		//request.headers.Set("Content-Type", "application/json");
+		
+		//unityhttp
+		request.SetHeader("x-api-key", key);
+		request.SetHeader("x-api-user", uid);
+		request.SetHeader("Content-Type", "application/json");
+
 		string taskAddJson = "{\"text\": \""+addText+"\",\"type\":\""+addType+"\"}";
 		Debug.Log("taskAddJson is "+taskAddJson);
 		request.Text = taskAddJson;
@@ -791,7 +874,13 @@ public class UserStats : MonoBehaviour
             //inspect response code
             Debug.Log(response.status);
             //inspect headers
-            Debug.Log(response.headers.Get("Content-Type"));
+
+			//uniweb
+			//Debug.Log(response.headers.Get("Content-Type"));
+			
+			//unityhttp
+			Debug.Log (response.GetHeaders("Content-Type"));
+
             //Get the body as a byte array
             //Debug.Log(response.bytes);
             //Or as a string
@@ -816,9 +905,18 @@ public class UserStats : MonoBehaviour
         //{
             var request = new HTTP.Request("GET", url);
 	        //set headers
-            request.headers.Set("x-api-key", key);
-            request.headers.Set("x-api-user", uid);
-	        request.Send();
+           
+			//uniweb
+			//request.headers.Set("x-api-key", key);
+			//request.headers.Set("x-api-user", uid);
+			//request.headers.Set("Content-Type", "application/json");
+			
+			//unityhttp
+			request.SetHeader("x-api-key", key);
+			request.SetHeader("x-api-user", uid);
+			//request.SetHeader("Content-Type", "application/json");
+	        
+			request.Send();
 	        while(!request.isDone) yield return new WaitForEndOfFrame();
 
 
@@ -830,7 +928,13 @@ public class UserStats : MonoBehaviour
 						//inspect response code
 						Debug.Log (response.status);
 						//inspect headers
-						Debug.Log (response.headers.Get ("Content-Type"));
+
+						//uniweb
+						//Debug.Log(response.headers.Get("Content-Type"));
+						
+						//unityhttp
+						Debug.Log (response.GetHeaders("Content-Type"));
+
 						//Get the body as a byte array
 						//Debug.Log(response.bytes);
 						//Or as a string

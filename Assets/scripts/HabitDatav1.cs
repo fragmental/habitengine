@@ -17,7 +17,7 @@ public class HabitDatav1
 	
 	public HabitDatav1(string jsonText)
 	{
-	ht = JsonSerializer.Decode (jsonText);
+//	ht = JsonSerializer.Decode (jsonText);
 	//root = JSONNode.Parse (jsonText);
     setupData(JSONNode.Parse(jsonText));
 	}
