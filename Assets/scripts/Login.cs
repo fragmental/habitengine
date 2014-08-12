@@ -9,9 +9,9 @@ using SimpleJSON;
 
 public class Login : MonoBehaviour
 {
-    //public string bUrl = "http://beta.habitrpg.com/api/v2/user";
-	//public string bUrl = "https://www.habitrpg.com/api/v2/user";
-	public string bUrl = "http://fragmental.no-ip.org:3000/api/v2";
+    private string bUrl = "https://beta.habitrpg.com/api/v2";
+	//private string bUrl = "https://www.habitrpg.com/api/v2";
+	//public string bUrl = "http://fragmental.no-ip.org:3000/api/v2";
 	public static string url ;
 	private string aUrl ;
 	private string cUrl;
@@ -70,7 +70,8 @@ public class Login : MonoBehaviour
 		 aUrl = bUrl + "/user/auth/local";
 		 cUrl = bUrl + "/status";
 		///moved
-
+		Debug.Log ("aUrl is = " + aUrl);
+	
 
 
 		//var sockOut =Security.PrefetchSocketPolicy("http://fragmental.no-ip.org", 843);
@@ -120,10 +121,10 @@ public class Login : MonoBehaviour
         var request = new HTTP.Request("POST", aUrl);
 
         //uniweb
-        //request.headers.Set("Content-Type", "application/json");
+        request.headers.Set("Content-Type", "application/json");
         
 		//unityhttp
-		request.SetHeader("Content-Type", "application/json");
+		//request.SetHeader("Content-Type", "application/json");
 
 		request.Text = auth;
         
@@ -153,10 +154,10 @@ public class Login : MonoBehaviour
             //inspect headers
 
 			//uniweb
-			//Debug.Log(response.headers.Get("Content-Type"));
+			Debug.Log(response.headers.Get("Content-Type"));
 			
 			//unityhttp
-			Debug.Log (response.GetHeaders("Content-Type"));
+			//Debug.Log (response.GetHeaders("Content-Type"));
 
 
             //Get the body as a byte array
@@ -167,9 +168,9 @@ public class Login : MonoBehaviour
             //Type t = authResponse.GetType();
 
 			//uniweb
-			//Hashtable authResponse = JsonSerializer.Decode(response.Text) as Hashtable;
+			Hashtable authResponse = JsonSerializer.Decode(response.Text) as Hashtable;
 			//unityhttp
-			Hashtable authResponse = JSON.JsonDecode(response.Text) as Hashtable;
+			//Hashtable authResponse = JSON.JsonDecode(response.Text) as Hashtable;
             
 
 			//Debug.Log("Type is " + t.FullName);
@@ -220,10 +221,10 @@ public class Login : MonoBehaviour
 			//inspect headers
 
 			//uniweb
-			//Debug.Log(response.headers.Get("Content-Type"));
+			Debug.Log(response.headers.Get("Content-Type"));
 
 			//unityhttp
-			Debug.Log (response.GetHeaders("Content-Type"));
+			//Debug.Log (response.GetHeaders("Content-Type"));
 
 			//Get the body as a byte array
 			//Debug.Log(response.bytes);
@@ -251,12 +252,12 @@ public class Login : MonoBehaviour
         //set headers
 
 		//uniweb
-		//request.headers.Set("x-api-key", key);
-       	//request.headers.Set("x-api-user", uid);
+		request.headers.Set("x-api-key", key);
+       	request.headers.Set("x-api-user", uid);
 
 		//unityhttp
-		request.SetHeader("x-api-key", key);
-		request.SetHeader("x-api-user", uid);
+		//request.SetHeader("x-api-key", key);
+		//request.SetHeader("x-api-user", uid);
 
 
         request.Send();
@@ -278,10 +279,10 @@ public class Login : MonoBehaviour
             //inspect headers
 
 			//uniweb
-            //Debug.Log(response.headers.Get("Content-Type"));
+            Debug.Log(response.headers.Get("Content-Type"));
 
 			//unityhttp
-			Debug.Log(response.GetHeaders("Content-Type"));
+			//Debug.Log(response.GetHeaders("Content-Type"));
 
             //Get the body as a byte array
             //Debug.Log(response.bytes);
