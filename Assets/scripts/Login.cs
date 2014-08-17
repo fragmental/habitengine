@@ -199,7 +199,7 @@ public class Login : MonoBehaviour
     
 	public IEnumerator CheckServer()
 	{
-		var request = new HTTP.Request("POST", cUrl);
+		var request = new HTTP.Request("GET", cUrl);
 		
 		
 		//request.headers.Set("Content-Type", "application/json");

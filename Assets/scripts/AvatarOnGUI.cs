@@ -42,10 +42,10 @@ public class AvatarOnGUI : MonoBehaviour {
 	 * size string
 	 * daystart int
 	 */
-	public float left = 10;
-	public float top =9;
-	public float width =256;
-	public float height = 256;
+	public float left = -42;
+	public float top =-14;
+	public float width =128;
+	public float height = 128;
 
 	void Start () {
 
