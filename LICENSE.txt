@@ -1,0 +1,28 @@
+* Habit Engine Code is is copyright Stewart Martin, and GPL v3 licensed:
+This Source Code is subject to the terms of the GNU General Public License, v. 3.0.
+If a copy of the GPL was not distributed with this file, You can obtain one at http://www.gnu.org/licenses/gpl-3.0.txt
+
+* Assets and content designed for Mozilla BrowserQuest is licensed under CC-BY-SA 3.0:
+http://creativecommons.org/licenses/by-sa/3.0/
+
+* Assets and content designed for HabitRPG is licensed under CC-BY-NC-SA 3.0:
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+*Assets and content created for the Habit Engine, including the "Piggy"(or "Piggly") character and the castle are copyright Stewart Martin and is licensed under CC-BY-SA 3.0:
+http://creativecommons.org/licenses/by-sa/3.0/
+
+*Little Box Knight" is licensed under CC-BY-NC-SA 3.0:
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+http://opengameart.org/content/little-box-knight
+
+*StoneWall64.mat is from the Iron Bane Project and is licensed under CC-BY-NC-SA 3.0:
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+https://github.com/ironbane/IronbaneAssetsLegacy/blob/master/LICENSE
+
+*Previewlabs.Player Prefs is "in the public domain"
+
+*Fantasy Colorable GUI
+Fantasy colorable GUI may fall under the default Unity Asset Store license?
+http://unity3d.com/legal/as_terms
+
+*Todo: Other assets may be differently licensed? Including but not limited to Fantasy Colorable GUI, Tree_Textures,SimpleJSON, and...?

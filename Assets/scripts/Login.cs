@@ -5,20 +5,20 @@ using System.Collections.Generic;
 using System;
 using HTTP;
 using SimpleJSON;
-//using HTTP;
 
 
 public class Login : MonoBehaviour
 {
+//	private string bUrl = "http://healpha.heroku.com/";
     private string bUrl = "https://beta.habitrpg.com/api/v2";
 	//private string bUrl = "https://www.habitrpg.com/api/v2";
 	//public string bUrl = "http://fragmental.no-ip.org:3000/api/v2";
 	public static string url ;
 	private string aUrl ;
 	private string cUrl;
-    //public static string user = "b2f17791-3247-462b-8cfe-86e9f9bca28f";
+    //public static string user = "";
     public static string uid = "";
-    //public static string key = "45482a67-8c71-4595-bfa5-f19ddeca8d95";
+    //public static string key = "";
     public static string key = "";
     //public HabitDatav1 userData;
     public static string uName = "";
