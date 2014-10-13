@@ -1,0 +1,16 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+    "settings":
+    {
+        "ensure_newline_at_eof_on_save": false,
+        "trim_automatic_white_space": false,
+        "trim_trailing_white_space_on_save": false,
+        "translate_tabs_to_spaces": false,
+        "tab_size": "4"
+    }
+}

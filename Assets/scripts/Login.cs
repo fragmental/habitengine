@@ -6,13 +6,17 @@ using System;
 using HTTP;
 using SimpleJSON;
 
+using System.Net; // Dns.GetHostEntry
 
 public class Login : MonoBehaviour
 {
 //	private string bUrl = "http://healpha.heroku.com/";
-    private string bUrl = "https://beta.habitrpg.com/api/v2";
+    //private string bUrl = "https://beta.habitrpg.com/api/v2";
 	//private string bUrl = "https://www.habitrpg.com/api/v2";
 	//public string bUrl = "http://fragmental.no-ip.org:3000/api/v2";
+	// Temporary testing URL; should be switched back to default URL before 
+	// merging this branch!
+	private string bUrl = "http://192.168.151.162:3000/api/v2";
 	public static string url ;
 	private string aUrl ;
 	private string cUrl;
@@ -64,19 +68,88 @@ public class Login : MonoBehaviour
         //GUI.enabled = !blockUI;
 
         // Main label:
+
+	// Configuration settings for Socket Policy Server; these take effect only
+	// when the build platform is set to Web Player.
+	//
+	// Temporary testing host name; this remote host name should be changed to 
+	// the default base host name of bUrl before merging this branch
+	private string policy_server_remote_host_name = "virgo.local";
+	
+	// The port number **must** not require root-privileges, in order to be 
+	// used by Heroku deployments of HabitRPG; anything not in use that is above
+	// 1024 should be OK.
+	private int policy_server_port = 8433;
+	private int policy_server_timeout = 3000;
+
     void Start()
     {
+		// Build platform must be Web Player for the socket policy server 
+		// configuration to be used
+		#if UNITY_WEBPLAYER
+			bool policy_server_connected = false;
+			IPHostEntry remote_addr;
+
+			// Try resolving a given host name to an IP address; this must be
+			// done because:
+			//
+			// a) Security.PrefetchSocketPolicy method requires an IP address,
+			// so the burden of resolving a host name to an IP address is
+			// squarely on us.
+			//
+			// b) a web host does not necessarily reside at a static location
+			// (IP address), such as is the case with Heroku deployed apps
+			// (i.e.: www.habitrpg.com), nor may the location exist solely at
+			// one address (one host name can resolve to several IP addresses).
+			try {
+				remote_addr = Dns.GetHostEntry(policy_server_remote_host_name);
+
+				IPAddress[] addr = remote_addr.AddressList;
+
+				// Try connecting to the Socket Policy Server at each of the
+				// resolved addresses until we find a successful connection
+				for(int i = 0; i < addr.Length; ++i) {
+					
+					/* Additional debug info
+					Debug.Log(	"Host name " +
+								policy_server_remote_host_name +
+								"resolves to " +
+								addr[i].ToString() );
+					*/
+
+					policy_server_connected =
+						Security.PrefetchSocketPolicy(	addr[i].ToString(),
+														policy_server_port);
+
+					// Not a successful connection
+					if( policy_server_connected == false ) {
+						Debug.Log(	"Failed to connect to Policy Server at " +
+									addr[i].ToString() +
+									":" + policy_server_port);
+					}
+					else {
+						Debug.Log(	"Connected to Policy Server at " +
+									addr[i].ToString() +
+									":" +
+									policy_server_port);
+						// Mission success; onwards, progress, or so it seems!
+						break;
+					}
+				} // end for addr loop
+			}
+			catch {
+				// TODO: Handle err gracefully -- abort program execution?
+				Debug.Log(	"Failed to resolve DNS host name: " +
+							policy_server_remote_host_name);
+			}
+		#endif // UNITY_WEBPLAYER defined
+
 		//moved down here, because unity started to inexplicably whine.  Might have been my fault for for mistyping a variable name :/ -sjm
 		 url = bUrl+ "/user";
 		 aUrl = bUrl + "/user/auth/local";
 		 cUrl = bUrl + "/status";
 		///moved
 		Debug.Log ("aUrl is = " + aUrl);
-	
-
-
-		//var sockOut =Security.PrefetchSocketPolicy("http://fragmental.no-ip.org", 843);
-		//Security.PrefetchSocketPolicy("http://fragmental.no-ip.org", 843);
 
 		//Debug.Log ("Eff this waste " + sockOut);
 		 lPBSX=320;
