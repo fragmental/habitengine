@@ -5,6 +5,6 @@ It's currently just a client for habitRPG in the unity game engine, but I would 
 
 I want to use the best that modern media has to offer to empower people to change themselves and to change their own lives, instead of using that modern media as a means of escape.  By improving ourselves, we can improve the world.
 
-To start developing on the habitengine, simply clone this code, clone [unityhttp](https://github.com/andyburke/UnityHTTP) into the "assets" folder,  Open the Habit Engine project folder with Unity 2.6 beta(or better) or unity 2.5.3(or better), open the "login.unity" scene and then run.
+To start developing on the habitengine, simply clone this code, clone [unityhttp](https://github.com/andyburke/UnityHTTP) into the "assets" folder,  Open the Habit Engine project folder with Unity 4.6 beta(or better) or unity 4.5.3(or better), open the "login.unity" scene and then run.
 
 Alternatively you can use [uniweb](http://u3d.as/content/different-methods/uni-web/1Cw), instead of unityhttp.
